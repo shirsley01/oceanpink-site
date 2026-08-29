@@ -1500,35 +1500,72 @@ p {
 @media (max-width: 760px) {
 
     :root {
-        --header-height: 72px;
+        --header-height: 64px;
+        --section-space-mobile: 34px;
+    }
+
+    body {
+        font-size: 15px;
+        line-height: 1.55;
     }
 
     .container {
-        padding-left: 20px;
-        padding-right: 20px;
+        padding-left: 16px;
+        padding-right: 16px;
     }
 
     .section {
         padding: var(--section-space-mobile) 0;
     }
 
+    h1 {
+        font-size: 2.7rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+    }
+
+    h3 {
+        font-size: 1.25rem;
+    }
+
+    .eyebrow {
+        font-size: 0.68rem;
+        margin-bottom: 8px;
+    }
+
     .section-heading {
-        margin-bottom: 28px;
+        margin-bottom: 22px;
+    }
+
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    .logo {
+        font-size: 1.25rem;
     }
 
     .menu-button {
         display: flex;
+        padding: 6px;
         z-index: 1002;
+    }
+
+    .menu-button span {
+        width: 24px;
     }
 
     .navigation {
         align-items: flex-start;
         background: var(--off-white);
         flex-direction: column;
-        gap: 22px;
+        gap: 20px;
         inset: var(--header-height) 0 0 0;
         opacity: 0;
-        padding: 35px 24px;
+        padding: 30px 20px;
         pointer-events: none;
         position: fixed;
         transform: translateY(-10px);
@@ -1545,7 +1582,7 @@ p {
 
     .navigation a {
         font-family: var(--font-heading);
-        font-size: 1.65rem;
+        font-size: 1.45rem;
     }
 
     .menu-button.active span:nth-child(1) {
@@ -1561,87 +1598,112 @@ p {
     }
 
 
-    /* Home */
+    /* =========================
+       HERO HOME
+    ========================= */
 
     .hero {
-        min-height: 650px;
-        padding-bottom: 45px;
-        padding-top: calc(var(--header-height) + 45px);
+        min-height: 540px;
+        padding-bottom: 34px;
+        padding-top: calc(var(--header-height) + 34px);
     }
 
     .hero h1 {
-        font-size: clamp(2.8rem, 14vw, 4.5rem);
+        font-size: clamp(2.65rem, 11.5vw, 3.6rem);
+        line-height: 1.03;
+        max-width: 600px;
     }
 
     .hero-description {
-        font-size: 1rem;
-        margin-top: 16px;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        margin-top: 14px;
     }
 
     .hero-actions {
-        margin-top: 22px;
+        gap: 9px;
+        margin-top: 20px;
     }
 
-    .feature-grid,
-    .event-grid,
-    .two-columns {
-        grid-template-columns: 1fr;
+    .hero-actions .button {
+        min-height: 44px;
+        padding: 10px 17px;
+    }
+
+
+    /* =========================
+       CONCEITO
+    ========================= */
+
+    .feature-grid {
+        gap: 10px;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .feature-card {
-        min-height: auto;
-        padding: 24px 22px;
+        min-height: 175px;
+        padding: 18px 15px;
     }
 
     .feature-number {
-        margin-bottom: 22px;
+        font-size: 0.68rem;
+        margin-bottom: 15px;
     }
 
+    .feature-card h3 {
+        font-size: 1.15rem;
+        margin-bottom: 8px;
+    }
+
+    .feature-card p {
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+
+    /* =========================
+       GALERIA
+    ========================= */
+
     .home-gallery {
-        padding: 48px 0;
+        padding: 36px 0;
     }
 
     .gallery-heading {
-        margin-bottom: 24px;
-        padding: 0 20px;
+        margin-bottom: 20px;
+        padding: 0 16px;
+    }
+
+    .gallery-heading h2 {
+        font-size: 2rem;
     }
 
     .gallery-slide {
-        flex: 0 0 100%;
-        height: 360px;
+        flex: 0 0 84%;
+        height: 300px;
+    }
+
+    .gallery-track {
+        gap: 10px;
     }
 
     .gallery-arrow {
-        height: 40px;
-        width: 40px;
+        height: 36px;
+        width: 36px;
     }
 
     .gallery-arrow-left {
-        left: 10px;
+        left: 8px;
     }
 
     .gallery-arrow-right {
-        right: 10px;
+        right: 8px;
     }
 
-    .event-image {
-        min-height: 220px;
-    }
 
-    .event-content {
-        padding: 22px;
-    }
-
-    .professional-cta-content,
-    .page-cta-content {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 24px;
-    }
-
-    .map-embed {
-        height: 320px;
-    }
+    /* =========================
+       AGENDAMENTO ONLINE
+    ========================= */
 
     .booking-editorial {
         grid-template-columns: 1fr;
@@ -1649,29 +1711,127 @@ p {
     }
 
     .booking-image {
-        min-height: 260px;
+        min-height: 220px;
     }
 
     .booking-content {
-        padding: 30px 0 0;
+        padding: 24px 0 0;
+    }
+
+    .booking-content h2 {
+        margin-bottom: 10px;
+    }
+
+    .booking-content > p:not(.eyebrow) {
+        margin-bottom: 18px;
     }
 
 
-    /* Páginas internas */
+    /* =========================
+       EVENTOS
+    ========================= */
+
+    .event-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr;
+    }
+
+    .event-card {
+        display: grid;
+        grid-template-columns: 38% 62%;
+        min-height: 150px;
+    }
+
+    .event-image {
+        height: 100%;
+        min-height: 150px;
+    }
+
+    .event-image span {
+        font-size: 0.55rem;
+        letter-spacing: 0.08em;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .event-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .event-date {
+        font-size: 0.62rem;
+        margin-bottom: 6px;
+    }
+
+    .event-content h3 {
+        font-size: 1.25rem;
+        margin-bottom: 7px;
+    }
+
+    .event-content p {
+        font-size: 0.79rem;
+        line-height: 1.4;
+    }
+
+
+    /* =========================
+       CTA
+    ========================= */
+
+    .professional-cta-content,
+    .page-cta-content {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+
+    /* =========================
+       CONTACTO HOME
+    ========================= */
+
+    .two-columns {
+        gap: 26px;
+        grid-template-columns: 1fr;
+    }
+
+    .contact-list {
+        gap: 6px;
+        margin-top: 17px;
+    }
+
+    .map-embed {
+        height: 250px;
+    }
+
+
+    /* =========================
+       HERO PÁGINAS INTERNAS
+    ========================= */
 
     .page-hero {
-        min-height: 410px;
-        padding-bottom: 45px;
-        padding-top: calc(var(--header-height) + 45px);
+        min-height: 330px;
+        padding-bottom: 34px;
+        padding-top: calc(var(--header-height) + 34px);
+    }
+
+    .page-hero-content h1 {
+        font-size: 2.7rem;
     }
 
     .page-hero-content > p:last-child {
-        font-size: 1rem;
-        margin-top: 14px;
+        font-size: 0.92rem;
+        margin-top: 11px;
     }
 
 
-    /* Sobre */
+    /* =========================
+       SOBRE
+    ========================= */
 
     .story-layout,
     .founder-layout,
@@ -1679,12 +1839,18 @@ p {
     .faq-layout,
     .application-layout,
     .contact-message-layout {
+        gap: 26px;
         grid-template-columns: 1fr;
     }
 
     .story-heading,
     .faq-heading {
         position: static;
+    }
+
+    .story-text p {
+        font-size: 0.94rem;
+        margin-bottom: 12px;
     }
 
     .founder-layout-reverse .founder-image,
@@ -1696,119 +1862,225 @@ p {
     .founder-image img,
     .profile-image,
     .profile-image img {
-        min-height: 360px;
+        min-height: 300px;
     }
 
+    .founder-content h2 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+    }
+
+    .founder-content p {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+
+
+    /* Valores */
+
     .values-grid {
-        grid-template-columns: 1fr;
+        gap: 10px;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .value-card {
-        min-height: auto;
+        min-height: 165px;
+        padding: 17px 14px;
+    }
+
+    .value-card span {
+        margin-bottom: 15px;
+    }
+
+    .value-card h3 {
+        font-size: 1.15rem;
+        margin-bottom: 7px;
+    }
+
+    .value-card p {
+        font-size: 0.8rem;
+        line-height: 1.4;
     }
 
 
-    /* Profissionais */
+    /* =========================
+       PROFISSIONAIS
+    ========================= */
+
+    .benefits-grid,
+    .process-grid {
+        gap: 10px;
+        grid-template-columns: repeat(2, 1fr);
+    }
 
     .benefit-card {
-        min-height: auto;
+        min-height: 175px;
+        padding: 17px 14px;
+    }
+
+    .benefit-card > span {
+        margin-bottom: 15px;
+    }
+
+    .benefit-card h3,
+    .process-card h3 {
+        font-size: 1.1rem;
+    }
+
+    .benefit-card p,
+    .process-card p {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .process-card {
+        padding: 16px 8px 10px 0;
+    }
+
+    .process-card > span {
+        margin-bottom: 13px;
     }
 
     .profile-list li {
-        padding-bottom: 9px;
-        padding-top: 9px;
+        font-size: 0.9rem;
+        padding-bottom: 8px;
+        padding-top: 8px;
     }
 
+
+    /* FAQ */
+
     .faq-item summary {
-        font-size: 1.12rem;
-        padding: 18px 38px 18px 0;
+        font-size: 1.05rem;
+        padding: 15px 34px 15px 0;
     }
 
     .faq-item summary::after {
-        top: 15px;
+        top: 12px;
     }
 
     .faq-item p {
-        padding: 0 38px 18px 0;
+        font-size: 0.88rem;
+        padding: 0 34px 15px 0;
     }
 
     .application-box {
-        padding: 28px 22px;
+        padding: 22px 18px;
     }
 
 
-    /* Contacto */
+    /* =========================
+       CONTACTO
+    ========================= */
+
+    .contact-heading {
+        margin-bottom: 24px;
+    }
 
     .contact-cards-grid {
-        grid-template-columns: 1fr;
+        gap: 10px;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .contact-card {
-        min-height: auto;
+        min-height: 195px;
+        padding: 17px 14px;
+    }
+
+    .contact-card-icon {
+        font-size: 0.9rem;
+        height: 36px;
+        margin-bottom: 14px;
+        width: 36px;
+    }
+
+    .contact-card-label {
+        font-size: 0.6rem;
+        margin-bottom: 5px;
+    }
+
+    .contact-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 7px;
+    }
+
+    .contact-card > p:not(.contact-card-label) {
+        font-size: 0.78rem;
+        line-height: 1.4;
+        margin-bottom: 12px;
+    }
+
+    .contact-card-link {
+        font-size: 0.76rem;
     }
 
     .contact-message-box {
-        padding: 28px 22px;
+        padding: 22px 18px;
     }
 
 
-    /* Rodapé */
+    /* =========================
+       FOOTER
+    ========================= */
 
     .footer {
-        padding-top: 34px;
+        padding-top: 28px;
     }
 
     .footer-content {
-        gap: 28px;
-        grid-template-columns: 1fr;
-        padding-bottom: 26px;
+        gap: 22px;
+        grid-template-columns: 1fr 1fr;
+        padding-bottom: 20px;
+    }
+
+    .footer-about {
+        grid-column: 1 / -1;
+    }
+
+    .footer-about p {
+        font-size: 0.82rem;
     }
 
     .footer-links,
     .footer-contact {
-        gap: 7px;
+        gap: 6px;
+    }
+
+    .footer-links a,
+    .footer-contact a {
+        font-size: 0.82rem;
     }
 
     .footer-bottom-content {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 9px;
+        align-items: center;
+        flex-direction: row;
+        gap: 10px;
     }
 
     .footer-bottom {
-        padding: 10px 0;
+        padding: 9px 0;
     }
 }
 
 
 @media (max-width: 520px) {
 
-    .benefits-grid,
-    .process-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .hero-actions {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .hero-actions .button {
-        width: 100%;
+    .hero h1 {
+        font-size: 2.65rem;
     }
 
     .family-statement blockquote {
-        font-size: 1.85rem;
+        font-size: 1.65rem;
     }
 
     .gallery-slide {
-        height: 330px;
+        height: 285px;
     }
 
     .founder-image,
     .founder-image img,
     .profile-image,
     .profile-image img {
-        min-height: 320px;
+        min-height: 280px;
     }
 }
