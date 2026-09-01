@@ -624,7 +624,15 @@ p {
     background: linear-gradient(145deg, #efdce1, #d9b1bc);
     display: flex;
     justify-content: center;
-    min-height: 280px;
+    height: 300px;
+    overflow: hidden;
+}
+
+.event-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .event-image span {
