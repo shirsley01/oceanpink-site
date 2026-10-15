@@ -3251,43 +3251,36 @@
   // TIPO DE SERVIÇO
   // =========================================================
 
-  function getServiceType(
-    service
+ function getServiceType(service) {
+  const name = normalizeText(service?.name || '');
+
+  // SERVIÇOS DE PEDICURE
+  if (
+    [
+      'verniz de gel nos pes',
+      'verniz gel nos pes',
+      'gelinho nos pes',
+      'pedicure gelinho',
+      'pedicure',
+      'pedicure premium'
+    ].includes(name)
   ) {
-    const name =
-      normalizeText(
-        service?.name
-      )
-
-    if (
-      [
-        'gelinho nos pes',
-        'pedicure gelinho',
-        'pedicure',
-        'pedicure premium',
-      ].includes(
-        name
-      )
-    ) {
-      return 'pedicure'
-    }
-
-    if (
-      name ===
-      'manutencao'
-    ) {
-      return 'manutencao'
-    }
-
-    if (
-      name ===
-      'manutencao de outra profissional'
-    ) {
-      return 'manutencao-outra'
-    }
-
-    return 'manicure'
+    return 'pedicure';
   }
+
+  // MANUTENÇÃO NORMAL
+  if (name === 'manutencao') {
+    return 'manutencao';
+  }
+
+  // MANUTENÇÃO DE OUTRA PROFISSIONAL
+  if (name === 'manutencao de outra profissional') {
+    return 'manutencao-outra';
+  }
+
+  // RESTANTES SERVIÇOS
+  return 'manicure';
+}
 
   function isMaintenance(
     service
