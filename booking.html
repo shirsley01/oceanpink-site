@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+
+    <!-- Configurações básicas -->
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <!-- SEO: Título da página -->
+    <title>Agendamento Online | Marcar Unhas em Braga | Ocean Pink</title>
+
+    <!-- SEO: Descrição -->
+    <meta name="description" content="Faça o seu agendamento online no Ocean Pink Nail Bar, em Braga. Escolha os serviços, a profissional e o horário disponível.">
+
+    <!-- Permitir indexação pelos motores de pesquisa -->
+    <meta
+        name="robots"
+        content="index, follow"
+    >
+
+    <!-- Endereço oficial da página -->
+    <link
+        rel="canonical"
+        href="https://www.oceanpink.pt/booking.html"
+    >
+
+
+    <!-- ==========================================
+         OPEN GRAPH - REDES SOCIAIS
+    =========================================== -->
+
+    <meta
+        property="og:type"
+        content="website"
+    >
+
+    <meta
+        property="og:locale"
+        content="pt_PT"
+    >
+
+    <meta
+        property="og:site_name"
+        content="Ocean Pink Nail Bar"
+    >
+
+    <meta
+        property="og:title"
+        content="Agendamento Online | Ocean Pink Nail Bar"
+    >
+
+    <meta
+        property="og:description"
+        content="Reserve o seu momento no Ocean Pink Nail Bar, em Braga. Escolha os serviços, a profissional e o horário da sua preferência."
+    >
+
+    <meta
+        property="og:url"
+        content="https://www.oceanpink.pt/booking.html"
+    >
+
+
+    <!-- ==========================================
+         SCHEMA.ORG - DADOS ESTRUTURADOS
+    =========================================== -->
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+
+        "@type": "WebPage",
+
+        "@id": "https://www.oceanpink.pt/booking.html#webpage",
+
+        "url": "https://www.oceanpink.pt/booking.html",
+
+        "name": "Agendamento Online | Ocean Pink Nail Bar",
+
+        "description": "Faça a sua marcação online no Ocean Pink Nail Bar, em Braga. Escolha os serviços de unhas, a profissional e o horário disponível.",
+
+        "inLanguage": "pt-PT",
+
+        "isPartOf": {
+            "@type": "WebSite",
+
+            "@id": "https://www.oceanpink.pt/#website",
+
+            "name": "Ocean Pink Nail Bar",
+
+            "url": "https://www.oceanpink.pt/"
+        },
+
+        "about": {
+            "@id": "https://www.oceanpink.pt/#business"
+        },
+
+        "potentialAction": {
+            "@type": "ReserveAction",
+
+            "name": "Agendar serviços no Ocean Pink",
+
+            "target": {
+                "@type": "EntryPoint",
+
+                "urlTemplate": "https://www.oceanpink.pt/booking.html",
+
+                "inLanguage": "pt-PT"
+            }
+        }
+    }
+    </script>
+
+
+    <!-- ==========================================
+         ESTILOS DO WEBSITE
+    =========================================== -->
+
+    <!-- CSS principal -->
+    <link
+        rel="stylesheet"
+        href="styles.css"
+    >
+
+    <!-- CSS da página de agendamento -->
+    <link
+        rel="stylesheet"
+        href="booking.css"
+    >
+
+
+    <!-- ==========================================
+         ÍCONES FONT AWESOME
+    =========================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <meta property="og:image" content="https://www.oceanpink.pt/images/partilha-oceanpink.jpg">
+    <meta property="og:image:alt" content="Ocean Pink Nail Bar em Braga">
+    <meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body>
+
+<header class="header">
+    <div class="container header-content">
+
+        <a href="index.html" class="logo">
+            OCEAN <span>PINK</span>
+        </a>
+
+        <button
+            class="menu-button"
+            type="button"
+            aria-label="Abrir menu"
+            aria-expanded="false"
+            aria-controls="main-navigation"
+        >
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav
+            id="main-navigation"
+            class="navigation"
+        >
+            <a href="index.html">
+                Início
+            </a>
+
+            <a
+                href="booking.html"
+                class="active"
+            >
+                Agendamento online
+            </a>
+
+            <a href="sobre.html">
+                Sobre nós
+            </a>
+
+            <a href="profissionais.html">
+                Para profissionais
+            </a>
+
+            <a href="contacto.html">
+                Contacto
+            </a>
+        </nav>
+
+        <a
+            href="https://wa.me/351933468336"
+            class="button button-small header-button"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Falar connosco
+        </a>
+
+    </div>
+</header>
+
+
+<main class="public-booking-page">
+
+    <!-- =====================================================
+         HERO
+         Este bloco será escondido depois da confirmação
+    ====================================================== -->
+
+    <section
+        id="booking-hero"
+        class="public-booking-hero"
+    >
+        <div class="container">
+
+            <p class="eyebrow">
+                Agendamento online
+            </p>
+
+            <h1>
+                Reserve o seu momento.
+            </h1>
+
+            <p>
+                Escolha os serviços, a profissional e o horário que prefere.
+            </p>
+
+        </div>
+    </section>
+
+
+    <!-- =====================================================
+         BOOKING
+    ====================================================== -->
+
+    <section class="container public-booking-shell">
+
+        <div
+            id="booking-error"
+            class="public-booking-message error"
+            hidden
+        ></div>
+
+        <div
+            id="booking-success"
+            class="public-booking-success"
+            hidden
+        ></div>
+
+
+        <div
+            id="booking-app"
+            class="public-booking-grid"
+        >
+
+            <div class="public-booking-main">
+
+                <!-- =================================================
+                     1. SERVIÇOS
+                ================================================== -->
+
+                <section class="public-booking-card">
+
+                    <div class="public-booking-heading">
+
+                        <span>
+                            1
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Serviços
+                            </h2>
+
+                            <p>
+                                Selecione um ou mais serviços para a mesma profissional.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="public-service-category">
+
+                        <h3>
+                            Manicure
+                        </h3>
+
+                        <div
+                            id="manicure-services"
+                            class="public-services-list"
+                        ></div>
+
+                    </div>
+
+
+                    <div class="public-service-category">
+
+                        <h3>
+                            Pedicure
+                        </h3>
+
+                        <div
+                            id="pedicure-services"
+                            class="public-services-list"
+                        ></div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     2. PROFISSIONAL
+                ================================================== -->
+
+                <section class="public-booking-card">
+
+                    <div class="public-booking-heading">
+
+                        <span>
+                            2
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Profissional
+                            </h2>
+
+                            <p>
+                                Escolha uma profissional ou deixe-nos encontrar uma disponível.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="professionals-list"
+                        class="public-professionals-list"
+                    >
+
+                        <p class="public-muted">
+                            Selecione primeiro um serviço.
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     3. DATA E HORA
+                ================================================== -->
+
+                <section class="public-booking-card">
+
+                    <div class="public-booking-heading">
+
+                        <span>
+                            3
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Data e hora
+                            </h2>
+
+                            <p>
+                                Mostramos apenas horários realmente disponíveis.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <label class="public-field public-date-field">
+
+                        Data
+
+                        <input
+                            id="booking-date"
+                            type="date"
+                        >
+
+                    </label>
+
+
+                    <div
+                        id="slots-status"
+                        class="public-muted"
+                    >
+                        Selecione serviços e profissional.
+                    </div>
+
+
+                    <div
+                        id="slots-list"
+                        class="public-slots-list"
+                    ></div>
+
+
+                    <button
+                        id="next-availability-button"
+                        type="button"
+                        class="button public-secondary-button"
+                        hidden
+                    >
+                        Ver próximas disponibilidades
+                    </button>
+
+
+                    <div
+                        id="next-availability-list"
+                        class="public-next-availability"
+                    ></div>
+
+                </section>
+
+
+                <!-- =================================================
+                     4. DADOS DA CLIENTE
+                ================================================== -->
+
+                <section class="public-booking-card">
+
+                    <div class="public-booking-heading">
+
+                        <span>
+                            4
+                        </span>
+
+                        <div>
+
+                            <h2>
+                                Os seus dados
+                            </h2>
+
+                            <p>
+                                Usaremos estes dados apenas para gerir a sua marcação.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="public-two-columns">
+
+                        <label class="public-field">
+
+                            Nome
+
+                            <input
+                                id="client-name"
+                                type="text"
+                                placeholder="O seu nome"
+                                autocomplete="name"
+                            >
+
+                        </label>
+
+
+                        <label class="public-field">
+
+                            Telemóvel
+
+                            <input
+                                id="client-phone"
+                                type="tel"
+                                placeholder="912 345 678"
+                                autocomplete="tel"
+                            >
+
+                        </label>
+
+                    </div>
+
+
+                    <label class="public-field">
+
+                        Email
+                        <small>
+                            opcional
+                        </small>
+
+                        <input
+                            id="client-email"
+                            type="email"
+                            placeholder="nome@email.com"
+                            autocomplete="email"
+                        >
+
+                    </label>
+
+
+                    <label class="public-field">
+
+                        Observações
+                        <small>
+                            opcional
+                        </small>
+
+                        <textarea
+                            id="client-notes"
+                            rows="3"
+                            placeholder="Informação importante sobre a marcação..."
+                        ></textarea>
+
+                    </label>
+
+                </section>
+
+            </div>
+
+
+            <!-- =====================================================
+                 RESUMO
+            ====================================================== -->
+
+            <aside class="public-booking-summary">
+
+                <p class="eyebrow">
+                    Resumo
+                </p>
+
+                <h2>
+                    A sua marcação
+                </h2>
+
+
+                <div class="public-summary-row">
+
+                    <span>
+                        Serviços
+                    </span>
+
+                    <strong id="summary-services">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="public-summary-row">
+
+                    <span>
+                        Profissional
+                    </span>
+
+                    <strong id="summary-professional">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="public-summary-row">
+
+                    <span>
+                        Data
+                    </span>
+
+                    <strong id="summary-date">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="public-summary-row">
+
+                    <span>
+                        Hora
+                    </span>
+
+                    <strong id="summary-time">
+                        —
+                    </strong>
+
+                </div>
+
+
+                <div class="public-summary-row public-summary-total">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <strong id="summary-price">
+                        0,00 €
+                    </strong>
+
+                </div>
+
+
+                <button
+                    id="confirm-booking"
+                    type="button"
+                    class="button public-confirm-button"
+                    disabled
+                >
+                    Confirmar marcação
+                </button>
+
+
+                <p class="public-booking-note">
+                    A marcação só fica concluída após a confirmação.
+                </p>
+
+            </aside>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer class="footer">
+
+    <div class="footer-bottom">
+
+        <div class="container footer-bottom-content">
+            <a href="https://livroreclamacoes.pt/Pedido/Reclamacao?EconomicOperator=43123174&amp;Store=0" target="_blank" rel="noopener noreferrer">Livro de Reclamações e Elogios</a>
+
+            <p>
+                ©
+                <span id="current-year"></span>
+                Ocean Pink Nail Bar.
+                Todos os direitos reservados.
+            </p>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
+<script src="booking.js"></script>
+
+</body>
+</html>

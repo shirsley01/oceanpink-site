@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
+    <!-- Página inicial -->
     <url>
         <loc>https://www.oceanpink.pt/</loc>
     </url>
 
+    <!-- Agendamento Online -->
+    <url>
+        <loc>https://www.oceanpink.pt/booking.html</loc>
+    </url>
+
+    <!-- Sobre Nós -->
     <url>
         <loc>https://www.oceanpink.pt/sobre.html</loc>
     </url>
 
+    <!-- Para Profissionais -->
     <url>
         <loc>https://www.oceanpink.pt/profissionais.html</loc>
     </url>
 
+    <!-- Contacto -->
     <url>
         <loc>https://www.oceanpink.pt/contacto.html</loc>
     </url>

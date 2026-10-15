@@ -367,31 +367,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    /* =====================================================
-       4. AGENDAMENTO ONLINE
-       TEMPORARIAMENTE INDISPONÍVEL
-    ===================================================== */
-
-    const bookingLinks =
-        document.querySelectorAll(".booking-link");
-
-
-    bookingLinks.forEach((link) => {
-
-        link.addEventListener(
-            "click",
-            (event) => {
-
-                event.preventDefault();
-
-                window.alert(
-                    "O agendamento online estará disponível brevemente."
-                );
-
-            }
-        );
-
-    });
-
 });
