@@ -605,3 +605,118 @@
         min-height: 46px;
     }
 }
+/* ==========================================================
+   CÓDIGO DE DESCONTO
+========================================================== */
+
+.public-discount-row {
+    align-items: flex-start;
+}
+
+.public-discount-code-box {
+    width: 100%;
+    max-width: 210px;
+
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 7px;
+}
+
+.public-discount-code-box input {
+    width: 100%;
+    min-width: 0;
+
+    border: 1px solid var(--border);
+
+    padding: 9px 10px;
+
+    background: white;
+    color: var(--text);
+
+    font: inherit;
+    font-size: .78rem;
+
+    outline: none;
+}
+
+.public-discount-code-box input:focus {
+    border-color: var(--pink-medium);
+}
+
+.public-discount-code-box button {
+    border: 1px solid var(--pink-dark);
+
+    padding: 9px 12px;
+
+    background: var(--pink-dark);
+    color: white;
+
+    font: inherit;
+    font-size: .76rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        opacity .2s ease,
+        background .2s ease;
+}
+
+.public-discount-code-box button:hover {
+    opacity: .9;
+}
+
+.public-discount-code-box button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.public-discount-message {
+    grid-column: 1 / -1;
+
+    min-height: 16px;
+
+    color: var(--pink-dark);
+
+    font-size: .7rem;
+    font-weight: 500;
+
+    text-align: right;
+}
+
+
+/* ==========================================================
+   SUBTOTAL + DESCONTO
+========================================================== */
+
+#subtotal-summary strong {
+    color: var(--text);
+}
+
+#discount-summary strong {
+    color: var(--pink-dark);
+}
+
+#discount-summary span {
+    color: var(--pink-dark);
+}
+
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+@media (max-width: 650px) {
+
+    .public-discount-row {
+        align-items: stretch;
+    }
+
+    .public-discount-code-box {
+        max-width: none;
+    }
+
+    .public-discount-message {
+        text-align: left;
+    }
+}
