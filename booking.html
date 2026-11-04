@@ -585,28 +585,90 @@
 
                 <div class="public-summary-row">
 
-                    <span>
-                        Hora
-                    </span>
+    <span>
+        Hora
+    </span>
 
-                    <strong id="summary-time">
-                        —
-                    </strong>
+    <strong id="summary-time">
+        —
+    </strong>
 
-                </div>
+</div>
 
 
-                <div class="public-summary-row public-summary-total">
+<div class="public-summary-row public-discount-row">
 
-                    <span>
-                        Total
-                    </span>
+    <span>
+        Código de desconto
+    </span>
 
-                    <strong id="summary-price">
-                        0,00 €
-                    </strong>
+    <div class="public-discount-code-box">
 
-                </div>
+        <input
+            id="discount-code-input"
+            type="text"
+            placeholder="Ex.: RASPADINHA10"
+            autocomplete="off"
+        >
+
+        <button
+            id="apply-discount-code"
+            type="button"
+        >
+            Aplicar
+        </button>
+
+        <small
+            id="discount-code-message"
+            class="public-discount-message"
+        ></small>
+
+    </div>
+
+</div>
+
+
+<div
+    id="subtotal-summary"
+    class="public-summary-row"
+    hidden
+>
+    <span>
+        Subtotal
+    </span>
+
+    <strong id="summary-subtotal">
+        0,00 €
+    </strong>
+</div>
+
+
+<div
+    id="discount-summary"
+    class="public-summary-row"
+    hidden
+>
+    <span>
+        Desconto
+    </span>
+
+    <strong id="summary-discount">
+        -0,00 €
+    </strong>
+</div>
+
+
+<div class="public-summary-row public-summary-total">
+
+    <span>
+        Total
+    </span>
+
+    <strong id="summary-price">
+        0,00 €
+    </strong>
+
+</div>
 
 
                 <button

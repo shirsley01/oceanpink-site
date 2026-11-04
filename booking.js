@@ -15,31 +15,36 @@
   // ESTADO
   // =========================================================
 
-  const state = {
-    services: [],
-    professionals: [],
+ const state = {
+  services: [],
+  professionals: [],
 
-    // Agenda individual:
-    // oceanpink.pt/gabriela
-    fixedProfessional: null,
-    fixedProfessionalSlug: null,
+  fixedProfessional: null,
+  fixedProfessionalSlug: null,
 
-    selectedServices: [],
-    procedureOptions: {},
+  selectedServices: [],
+  procedureOptions: {},
 
-    serviceOptionGroups: {},
-    selectedServiceOptions: {},
+  serviceOptionGroups: {},
+  selectedServiceOptions: {},
 
-    selectedProfessional: 'ANY',
+  selectedProfessional: 'ANY',
 
-    selectedDate:
-      getLocalDateString(
-        new Date()
-      ),
+  selectedDate:
+    getLocalDateString(
+      new Date()
+    ),
 
-    slots: [],
-    selectedSlot: null,
-  }
+  slots: [],
+  selectedSlot: null,
+
+  discountCode: null,
+  discountType: null,
+  discountValue: 0,
+  discountAmount: 0,
+  discountFinalTotal: null,
+  discountSubtotal: null,
+}
 
   // =========================================================
   // ELEMENTOS
@@ -150,6 +155,42 @@
       document.getElementById(
         'summary-price'
       ),
+
+      discountCodeInput:
+  document.getElementById(
+    'discount-code-input'
+  ),
+
+applyDiscountCode:
+  document.getElementById(
+    'apply-discount-code'
+  ),
+
+discountCodeMessage:
+  document.getElementById(
+    'discount-code-message'
+  ),
+
+subtotalSummary:
+  document.getElementById(
+    'subtotal-summary'
+  ),
+
+summarySubtotal:
+  document.getElementById(
+    'summary-subtotal'
+  ),
+
+discountSummary:
+  document.getElementById(
+    'discount-summary'
+  ),
+
+summaryDiscount:
+  document.getElementById(
+    'summary-discount'
+  ),
+
   }
 
   // =========================================================
@@ -414,7 +455,27 @@
       async () => {
         state.selectedDate =
           el.date.value
+ 
+          state.discountCode = null
+state.discountType = null
+state.discountValue = 0
+state.discountAmount = 0
+state.discountFinalTotal = null
+state.discountSubtotal = null
 
+if (
+  el.discountCodeMessage
+) {
+  el.discountCodeMessage.textContent =
+    ''
+}
+
+if (
+  el.discountCodeInput
+) {
+  el.discountCodeInput.value =
+    ''
+}
         state.selectedSlot =
           null
 
@@ -457,6 +518,11 @@
       'click',
       createBooking
     )
+
+    el.applyDiscountCode?.addEventListener(
+  'click',
+  applyDiscountCode
+     )
   }
 
   // =========================================================
@@ -2605,6 +2671,27 @@
             state.selectedDate =
               found.date
 
+            state.discountCode = null
+            state.discountType = null
+            state.discountValue = 0
+            state.discountAmount = 0
+            state.discountFinalTotal = null
+            state.discountSubtotal = null
+
+            if (
+              el.discountCodeMessage
+            ) {
+              el.discountCodeMessage.textContent =
+                ''
+            }
+
+            if (
+              el.discountCodeInput
+            ) {
+              el.discountCodeInput.value =
+                ''
+            }
+
             el.date.value =
               found.date
 
@@ -2657,6 +2744,126 @@
   // =========================================================
   // CRIAR MARCAÇÃO
   // =========================================================
+
+  async function applyDiscountCode() {
+  showError('')
+
+  const code =
+    el.discountCodeInput
+      ?.value
+      .trim()
+
+  if (!code) {
+    el.discountCodeMessage.textContent =
+      'Introduza um código de desconto.'
+
+    return
+  }
+
+  const subtotal =
+    calculateBookingTotal()
+
+  if (subtotal <= 0) {
+    el.discountCodeMessage.textContent =
+      'Selecione primeiro um serviço.'
+
+    return
+  }
+
+  el.applyDiscountCode.disabled =
+    true
+
+  el.applyDiscountCode.textContent =
+    'A validar...'
+
+  const {
+    data,
+    error,
+  } = await client.rpc(
+    'public_validate_discount_code',
+    {
+      p_code:
+        code,
+
+      p_booking_date:
+        state.selectedDate,
+
+      p_subtotal:
+        subtotal,
+    }
+  )
+
+  el.applyDiscountCode.disabled =
+    false
+
+  el.applyDiscountCode.textContent =
+    'Aplicar'
+
+  if (
+    error ||
+    !data?.length
+  ) {
+    state.discountCode =
+      null
+
+    state.discountType =
+      null
+
+    state.discountValue =
+      0
+
+    state.discountAmount =
+      0
+
+    state.discountFinalTotal =
+      null
+
+    state.discountSubtotal =
+      null
+
+    el.discountCodeMessage.textContent =
+      'Código inválido ou expirado.'
+
+    updateSummary()
+
+    return
+  }
+
+  const discount =
+    data[0]
+
+  state.discountCode =
+    discount.code
+
+  state.discountType =
+    discount.discount_type
+
+  state.discountValue =
+    Number(
+      discount.discount_value ||
+      0
+    )
+
+  state.discountAmount =
+    Number(
+      discount.discount_amount ||
+      0
+    )
+
+  state.discountFinalTotal =
+    Number(
+      discount.final_total ||
+      0
+    )
+
+  state.discountSubtotal =
+  subtotal
+
+  el.discountCodeMessage.textContent =
+    `Código ${discount.code} aplicado.`
+
+  updateSummary()
+}
 
   async function createBooking() {
     showError('')
@@ -2727,9 +2934,9 @@
       'ANY'
 
     const rpcName =
-      automatic
-        ? 'public_create_booking_any_with_options'
-        : 'public_create_booking_with_options'
+  automatic
+    ? 'public_create_booking_any_with_discount'
+    : 'public_create_booking_with_discount'
 
     const commonArgs = {
       p_client_name:
@@ -2759,6 +2966,10 @@
 
       p_option_selections:
         getOptionSelectionsPayload(),
+        
+      p_discount_code:
+      state.discountCode ||
+     null,
     }
 
     const rpcArgs =
@@ -2937,6 +3148,76 @@
   // RESUMO
   // =========================================================
 
+  function calculateBookingTotal() {
+  const selected =
+    state.selectedServices
+      .map(
+        (id) =>
+          state.services.find(
+            (service) =>
+              service.id === id
+          )
+      )
+      .filter(Boolean)
+
+  return selected.reduce(
+    (
+      sum,
+      service
+    ) => {
+      const procedureExtra =
+        state
+          .procedureOptions[
+            service.id
+          ]
+          ? Number(
+              service
+                .procedure_price_delta ||
+              0
+            )
+          : 0
+
+      const baseTotal =
+        Number(
+          service.price ||
+          0
+        ) +
+        procedureExtra
+
+      const discount =
+        service.promotion_id
+          ? Number(
+              service
+                .discount_percent ||
+              0
+            )
+          : 0
+
+      const discountedBase =
+        discount > 0
+          ? baseTotal *
+            (
+              1 -
+              discount /
+                100
+            )
+          : baseTotal
+
+      const optionExtra =
+        getOptionExtraPrice(
+          service.id
+        )
+
+      return (
+        sum +
+        discountedBase +
+        optionExtra
+      )
+    },
+    0
+  )
+}
+
   function updateSummary() {
     const selected =
       state.selectedServices
@@ -3068,69 +3349,79 @@
     // extras sem desconto
     // =======================================================
 
-    const total =
-      selected.reduce(
-        (
-          sum,
-          service
-        ) => {
-          const procedureExtra =
-            state
-              .procedureOptions[
-                service.id
-              ]
-              ? Number(
-                  service
-                    .procedure_price_delta ||
-                  0
-                )
-              : 0
+    const subtotal =
+  calculateBookingTotal()
 
-          const baseTotal =
-            Number(
-              service.price ||
-              0
-            ) +
-            procedureExtra
+if (
+  state.discountCode &&
+  state.discountSubtotal !== null &&
+  Math.abs(
+    subtotal -
+    state.discountSubtotal
+  ) > 0.001
+) {
+  state.discountCode =
+    null
 
-          const discount =
-            service.promotion_id
-              ? Number(
-                  service
-                    .discount_percent ||
-                  0
-                )
-              : 0
+  state.discountType =
+    null
 
-          const discountedBase =
-            discount >
-            0
-              ? baseTotal *
-                (
-                  1 -
-                  discount /
-                    100
-                )
-              : baseTotal
+  state.discountValue =
+    0
 
-          const optionExtra =
-            getOptionExtraPrice(
-              service.id
-            )
+  state.discountAmount =
+    0
 
-          return (
-            sum +
-            discountedBase +
-            optionExtra
-          )
-        },
-        0
-      )
+  state.discountFinalTotal =
+    null
 
-    el.summaryPrice.textContent =
-      `${formatPrice(
-        total
-      )} €`
+  state.discountSubtotal =
+    null
+
+  if (
+    el.discountCodeMessage
+  ) {
+    el.discountCodeMessage.textContent =
+      'A marcação foi alterada. Aplique novamente o código.'
+  }
+}
+
+if (
+  state.discountCode &&
+  state.discountFinalTotal !== null
+) {
+  el.subtotalSummary.hidden =
+    false
+
+  el.discountSummary.hidden =
+    false
+
+  el.summarySubtotal.textContent =
+    `${formatPrice(
+      subtotal
+    )} €`
+
+  el.summaryDiscount.textContent =
+    `-${formatPrice(
+      state.discountAmount
+    )} €`
+
+  el.summaryPrice.textContent =
+    `${formatPrice(
+      state.discountFinalTotal
+    )} €`
+} else {
+  el.subtotalSummary.hidden =
+    true
+
+  el.discountSummary.hidden =
+    true
+
+  el.summaryPrice.textContent =
+    `${formatPrice(
+      subtotal
+    )} €`
+}
 
     updateConfirmState()
   }
