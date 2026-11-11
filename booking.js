@@ -1,3 +1,4 @@
+
 (() => {
   const SUPABASE_URL =
     'https://gwczbdjjawsjttzskqms.supabase.co'
@@ -17,6 +18,7 @@
 
  const state = {
   services: [],
+  serviceCategories: [],
   professionals: [],
 
   fixedProfessional: null,
@@ -51,14 +53,9 @@
   // =========================================================
 
   const el = {
-    manicure:
+    serviceCategories:
       document.getElementById(
-        'manicure-services'
-      ),
-
-    pedicure:
-      document.getElementById(
-        'pedicure-services'
+        'service-categories-container'
       ),
 
     professionals:
@@ -560,6 +557,88 @@ if (
       data || []
 
     // =======================================================
+    // SECÇÕES / CATEGORIAS DINÂMICAS
+    // =======================================================
+
+    const [
+      categoriesResult,
+      assignmentsResult,
+    ] = await Promise.all([
+      client.rpc(
+        'public_get_service_categories'
+      ),
+
+      client.rpc(
+        'public_get_booking_service_category_assignments'
+      ),
+    ])
+
+    if (
+      categoriesResult.error
+    ) {
+      console.error(
+        'Erro ao carregar secções dos serviços:',
+        categoriesResult.error
+      )
+
+      showError(
+        'Não foi possível carregar as secções dos serviços.'
+      )
+
+      state.serviceCategories =
+        []
+
+      return
+    }
+
+    if (
+      assignmentsResult.error
+    ) {
+      console.error(
+        'Erro ao carregar categorias dos serviços:',
+        assignmentsResult.error
+      )
+
+      showError(
+        'Não foi possível organizar os serviços por secção.'
+      )
+
+      state.serviceCategories =
+        []
+
+      return
+    }
+
+    state.serviceCategories =
+      categoriesResult.data || []
+
+    const categoryByService =
+      new Map(
+        (
+          assignmentsResult.data ||
+          []
+        ).map(
+          (item) => [
+            item.service_id,
+            item.category_id,
+          ]
+        )
+      )
+
+    state.services =
+      state.services.map(
+        (service) => ({
+          ...service,
+
+          category_id:
+            categoryByService.get(
+              service.id
+            ) ||
+            null,
+        })
+      )
+
+    // =======================================================
     // AGENDA INDIVIDUAL
     //
     // Em /gabriela mostrar apenas os serviços
@@ -1045,11 +1124,14 @@ if (
   // =========================================================
 
   function renderServices() {
-    const manicure =
-      []
+    if (
+      !el.serviceCategories
+    ) {
+      return
+    }
 
-    const pedicure =
-      []
+    el.serviceCategories.innerHTML =
+      ''
 
     const regularMaintenance =
       state.services.find(
@@ -1069,66 +1151,259 @@ if (
           'manutencao-outra'
       )
 
-    state.services.forEach(
-      (service) => {
-        const type =
-          getServiceType(
-            service
-          )
+    const configuredCategories =
+      state.serviceCategories
+        .map(
+          (category) => ({
+            ...category,
 
-        // Manutenção de outra profissional
-        // aparece dentro de Manutenção.
+            normalized_id:
+              category.category_id ||
+              category.id,
+
+            normalized_name:
+              category.category_name ||
+              category.name ||
+              'Secção',
+
+            normalized_area_sort_order:
+              Number(
+                category.area_sort_order ??
+                9999
+              ),
+
+            normalized_category_sort_order:
+              Number(
+                category.category_sort_order ??
+                category.sort_order ??
+                9999
+              ),
+          })
+        )
+        .filter(
+          (category) =>
+            category.normalized_id
+        )
+        .sort(
+          (a, b) =>
+            a.normalized_area_sort_order -
+              b.normalized_area_sort_order ||
+            a.normalized_category_sort_order -
+              b.normalized_category_sort_order ||
+            String(
+              a.normalized_name
+            ).localeCompare(
+              String(
+                b.normalized_name
+              ),
+              'pt-PT',
+              {
+                sensitivity:
+                  'base',
+              }
+            )
+        )
+
+    const knownCategoryIds =
+      new Set(
+        configuredCategories.map(
+          (category) =>
+            category.normalized_id
+        )
+      )
+
+    configuredCategories.forEach(
+      (category) => {
+        const categoryServices =
+          state.services
+            .filter(
+              (service) => {
+                if (
+                  service.category_id !==
+                  category.normalized_id
+                ) {
+                  return false
+                }
+
+                return (
+                  getServiceType(
+                    service
+                  ) !==
+                  'manutencao-outra'
+                )
+              }
+            )
+            .sort(
+              (a, b) =>
+                String(
+                  a.name ||
+                  ''
+                ).localeCompare(
+                  String(
+                    b.name ||
+                    ''
+                  ),
+                  'pt-PT',
+                  {
+                    sensitivity:
+                      'base',
+                  }
+                )
+            )
+
         if (
-          type ===
-          'manutencao-outra'
+          !categoryServices.length
         ) {
           return
         }
 
-        if (
-          type ===
-          'pedicure'
-        ) {
-          pedicure.push(
-            service
+        const section =
+          document.createElement(
+            'div'
           )
-        } else {
-          manicure.push(
-            service
+
+        section.className =
+          'public-service-category'
+
+        const heading =
+          document.createElement(
+            'h3'
+          )
+
+        heading.textContent =
+          category.normalized_name
+
+        const list =
+          document.createElement(
+            'div'
+          )
+
+        list.className =
+          'public-services-list'
+
+        categoryServices.forEach(
+          (service) => {
+            list.appendChild(
+              serviceCard(
+                service,
+                regularMaintenance,
+                otherProfessionalMaintenance
+              )
+            )
+          }
+        )
+
+        section.appendChild(
+          heading
+        )
+
+        section.appendChild(
+          list
+        )
+
+        el.serviceCategories.appendChild(
+          section
+        )
+      }
+    )
+
+    const uncategorizedServices =
+      state.services
+        .filter(
+          (service) => {
+            if (
+              getServiceType(
+                service
+              ) ===
+              'manutencao-outra'
+            ) {
+              return false
+            }
+
+            return (
+              !service.category_id ||
+              !knownCategoryIds.has(
+                service.category_id
+              )
+            )
+          }
+        )
+        .sort(
+          (a, b) =>
+            String(
+              a.name ||
+              ''
+            ).localeCompare(
+              String(
+                b.name ||
+                ''
+              ),
+              'pt-PT',
+              {
+                sensitivity:
+                  'base',
+              }
+            )
+        )
+
+    if (
+      uncategorizedServices.length
+    ) {
+      const section =
+        document.createElement(
+          'div'
+        )
+
+      section.className =
+        'public-service-category'
+
+      const heading =
+        document.createElement(
+          'h3'
+        )
+
+      heading.textContent =
+        'Outros'
+
+      const list =
+        document.createElement(
+          'div'
+        )
+
+      list.className =
+        'public-services-list'
+
+      uncategorizedServices.forEach(
+        (service) => {
+          list.appendChild(
+            serviceCard(
+              service,
+              regularMaintenance,
+              otherProfessionalMaintenance
+            )
           )
         }
-      }
-    )
+      )
 
-    el.manicure.innerHTML =
-      ''
+      section.appendChild(
+        heading
+      )
 
-    el.pedicure.innerHTML =
-      ''
+      section.appendChild(
+        list
+      )
 
-    manicure.forEach(
-      (service) => {
-        el.manicure.appendChild(
-          serviceCard(
-            service,
-            regularMaintenance,
-            otherProfessionalMaintenance
-          )
-        )
-      }
-    )
+      el.serviceCategories.appendChild(
+        section
+      )
+    }
 
-    pedicure.forEach(
-      (service) => {
-        el.pedicure.appendChild(
-          serviceCard(
-            service,
-            regularMaintenance,
-            otherProfessionalMaintenance
-          )
-        )
-      }
-    )
+    if (
+      !el.serviceCategories.children.length
+    ) {
+      el.serviceCategories.innerHTML =
+        '<p class="public-muted">Não existem serviços disponíveis de momento.</p>'
+    }
   }
 
   // =========================================================
@@ -3543,34 +3818,27 @@ if (
   // =========================================================
 
  function getServiceType(service) {
-  const name = normalizeText(service?.name || '');
+  const name =
+    normalizeText(
+      service?.name ||
+      ''
+    )
 
-  // SERVIÇOS DE PEDICURE
   if (
-    [
-      'verniz de gel nos pes',
-      'verniz gel nos pes',
-      'gelinho nos pes',
-      'pedicure gelinho',
-      'pedicure',
-      'pedicure premium'
-    ].includes(name)
+    name ===
+    'manutencao'
   ) {
-    return 'pedicure';
+    return 'manutencao'
   }
 
-  // MANUTENÇÃO NORMAL
-  if (name === 'manutencao') {
-    return 'manutencao';
+  if (
+    name ===
+    'manutencao de outra profissional'
+  ) {
+    return 'manutencao-outra'
   }
 
-  // MANUTENÇÃO DE OUTRA PROFISSIONAL
-  if (name === 'manutencao de outra profissional') {
-    return 'manutencao-outra';
-  }
-
-  // RESTANTES SERVIÇOS
-  return 'manicure';
+  return 'servico'
 }
 
   function isMaintenance(
