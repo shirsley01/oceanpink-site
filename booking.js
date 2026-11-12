@@ -975,6 +975,131 @@ if (
     return total
   }
 
+  function getMinimumRequiredOptionPrice(
+    serviceId
+  ) {
+    const groups =
+      getOptionGroups(
+        serviceId
+      )
+
+    let minimum =
+      0
+
+    let foundRequiredPrice =
+      false
+
+    groups.forEach(
+      (group) => {
+        if (
+          !group.required
+        ) {
+          return
+        }
+
+        const prices =
+          (
+            group.options ||
+            []
+          )
+            .map(
+              (option) =>
+                Number(
+                  option.price_delta ||
+                  0
+                )
+            )
+            .filter(
+              (value) =>
+                Number.isFinite(
+                  value
+                ) &&
+                value >= 0
+            )
+
+        if (!prices.length) {
+          return
+        }
+
+        foundRequiredPrice =
+          true
+
+        // SINGLE -> escolhe a opção mais barata.
+        // MULTIPLE obrigatório -> basta pelo menos uma escolha,
+        // por isso também começa pela opção mais barata.
+        minimum +=
+          Math.min(
+            ...prices
+          )
+      }
+    )
+
+    return foundRequiredPrice
+      ? minimum
+      : 0
+  }
+
+  function getServiceDisplayPrice(
+    service
+  ) {
+    const basePrice =
+      Number(
+        service.price ||
+        0
+      )
+
+    const selectedExtra =
+      getOptionExtraPrice(
+        service.id
+      )
+
+    const isSelected =
+      state.selectedServices.includes(
+        service.id
+      )
+
+    if (
+      isSelected &&
+      selectedExtra > 0
+    ) {
+      return {
+        mode: 'TOTAL',
+        value:
+          basePrice +
+          selectedExtra,
+      }
+    }
+
+    if (basePrice > 0) {
+      return {
+        mode: 'BASE',
+        value:
+          basePrice,
+      }
+    }
+
+    const minimumOptionPrice =
+      getMinimumRequiredOptionPrice(
+        service.id
+      )
+
+    if (
+      minimumOptionPrice >
+      0
+    ) {
+      return {
+        mode: 'FROM',
+        value:
+          minimumOptionPrice,
+      }
+    }
+
+    return {
+      mode: 'BASE',
+      value: 0,
+    }
+  }
+
   function requiredOptionsComplete() {
     return state
       .selectedServices
@@ -1546,8 +1671,52 @@ if (
       <span class="public-service-price">
 
         ${
-          service.promotion_id
-            ? `
+          (() => {
+            const displayPrice =
+              getServiceDisplayPrice(
+                service
+              )
+
+            if (
+              displayPrice.mode ===
+              'FROM'
+            ) {
+              return `
+                <small
+                  style="
+                    display:block;
+                    margin-bottom:2px;
+                    font-size:.68rem;
+                    color:#8d6f7e;
+                    font-weight:600;
+                  "
+                >
+                  a partir de
+                </small>
+
+                <strong>
+                  ${formatPrice(
+                    displayPrice.value
+                  )} €
+                </strong>
+              `
+            }
+
+            if (
+              displayPrice.mode ===
+                'TOTAL' ||
+              !service.promotion_id
+            ) {
+              return `
+                <strong>
+                  ${formatPrice(
+                    displayPrice.value
+                  )} €
+                </strong>
+              `
+            }
+
+            return `
               <small
                 style="
                   display:block;
@@ -1579,13 +1748,7 @@ if (
                 )}%
               </small>
             `
-            : `
-              <strong>
-                ${formatPrice(
-                  service.price
-                )} €
-              </strong>
-            `
+          })()
         }
 
       </span>
