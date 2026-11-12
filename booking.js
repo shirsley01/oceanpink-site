@@ -975,68 +975,40 @@ if (
     return total
   }
 
-  function getMinimumRequiredOptionPrice(
+  function getMinimumOptionPrice(
     serviceId
   ) {
-    const groups =
+    const prices =
       getOptionGroups(
         serviceId
       )
-
-    let minimum =
-      0
-
-    let foundRequiredPrice =
-      false
-
-    groups.forEach(
-      (group) => {
-        if (
-          !group.required
-        ) {
-          return
-        }
-
-        const prices =
-          (
+        .flatMap(
+          (group) =>
             group.options ||
             []
-          )
-            .map(
-              (option) =>
-                Number(
-                  option.price_delta ||
-                  0
-                )
+        )
+        .map(
+          (option) =>
+            Number(
+              option.price_delta ||
+              0
             )
-            .filter(
-              (value) =>
-                Number.isFinite(
-                  value
-                ) &&
-                value >= 0
-            )
+        )
+        .filter(
+          (value) =>
+            Number.isFinite(
+              value
+            ) &&
+            value > 0
+        )
 
-        if (!prices.length) {
-          return
-        }
+    if (!prices.length) {
+      return 0
+    }
 
-        foundRequiredPrice =
-          true
-
-        // SINGLE -> escolhe a opção mais barata.
-        // MULTIPLE obrigatório -> basta pelo menos uma escolha,
-        // por isso também começa pela opção mais barata.
-        minimum +=
-          Math.min(
-            ...prices
-          )
-      }
+    return Math.min(
+      ...prices
     )
-
-    return foundRequiredPrice
-      ? minimum
-      : 0
   }
 
   function getServiceDisplayPrice(
@@ -1079,7 +1051,7 @@ if (
     }
 
     const minimumOptionPrice =
-      getMinimumRequiredOptionPrice(
+      getMinimumOptionPrice(
         service.id
       )
 
