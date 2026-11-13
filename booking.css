@@ -910,24 +910,61 @@
 
 
 /* ==========================================================
-   FILTRO DINÂMICO DE SECÇÕES
+   FILTRO DINÂMICO DE SECÇÕES — SWIPE SEM ALTERAR O LAYOUT
 ========================================================== */
 
-.public-service-filters {
-    width: 100%;
+/*
+   Importante no Safari/iPhone:
+   nenhum elemento do booking pode aumentar a largura da página.
+*/
+html,
+body {
     max-width: 100%;
+    overflow-x: hidden;
+}
+
+.public-booking-grid,
+.public-booking-main,
+.public-booking-card,
+#service-categories-container,
+.public-service-category,
+.public-services-list {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#service-categories-container {
+    overflow: hidden;
+}
+
+/*
+   A barra ocupa APENAS a largura disponível no cartão.
+   O conteúdo interno pode ser maior e desliza horizontalmente.
+*/
+.public-service-filters {
     display: flex;
-    flex-wrap: nowrap;
+    flex-flow: row nowrap;
+
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+
     gap: 10px;
-    overflow-x: auto;
+
+    overflow-x: scroll;
     overflow-y: hidden;
-    margin: 0 0 22px;
-    padding: 2px 2px 6px;
-    scrollbar-width: none;
+
+    margin: 0 0 22px 0;
+    padding: 2px 0 7px 0;
+
+    box-sizing: border-box;
+
     -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+
     overscroll-behavior-x: contain;
-    touch-action: pan-x;
+    scroll-snap-type: x proximity;
 }
 
 .public-service-filters::-webkit-scrollbar {
@@ -936,34 +973,49 @@
 
 .public-service-filter {
     flex: 0 0 auto;
-    min-width: max-content;
-    min-height: 38px;
+
+    /* Não usar min-width:max-content:
+       no Safari pode aumentar a largura intrínseca da página. */
+    width: auto;
+    min-width: 0;
+
+    min-height: 40px;
+
     border: 1px solid var(--border);
     border-radius: 999px;
+
     padding: 8px 16px;
-    background: white;
+
+    background: var(--white);
     color: var(--text);
+
     font: inherit;
-    font-size: .78rem;
+    font-size: .82rem;
     font-weight: 600;
-    cursor: pointer;
+
     white-space: nowrap;
+    cursor: pointer;
+
     scroll-snap-align: start;
 }
 
 .public-service-filter.selected {
     border-color: var(--pink-dark);
     background: var(--pink-dark);
-    color: white;
+    color: var(--white);
 }
 
-/* No mobile, mantém o conteúdo no mesmo tamanho da agenda.
-   A barra de filtros desliza horizontalmente por swipe. */
-@media (max-width: 900px) {
+@media (max-width: 650px) {
     .public-service-filters {
-        width: calc(100% + 2px);
-        margin-left: -1px;
-        padding-right: 18px;
+        /*
+           Compensa apenas visualmente o padding interno do cartão,
+           sem aumentar a largura real da página.
+        */
+        width: 100%;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        padding-right: 8px;
     }
 
     .public-service-filter {
