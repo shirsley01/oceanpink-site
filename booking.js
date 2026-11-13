@@ -33,6 +33,8 @@
   selectedProfessional: 'ANY',
 
   areaProfessionals: {},
+  areaSelectedProfessionals: {},
+  serviceCategoryFilter: 'ALL',
   multiAreaSchedule: [],
 
   selectedDate:
@@ -985,28 +987,66 @@ if (
     group,
     date
   ) {
+    const selectedProfessional =
+      state
+        .areaSelectedProfessionals[
+          group.areaId
+        ] ||
+      'ANY'
+
+    const rpcName =
+      selectedProfessional ===
+      'ANY'
+        ? 'public_get_auto_available_slots_with_options'
+        : 'public_get_available_slots_with_options'
+
+    const rpcArgs =
+      selectedProfessional ===
+      'ANY'
+        ? {
+            p_service_ids:
+              group.serviceIds,
+
+            p_has_procedure:
+              getGroupProcedureArray(
+                group
+              ),
+
+            p_work_date:
+              date,
+
+            p_option_selections:
+              getGroupOptionSelectionsPayload(
+                group
+              ),
+          }
+        : {
+            p_professional_id:
+              selectedProfessional,
+
+            p_service_ids:
+              group.serviceIds,
+
+            p_has_procedure:
+              getGroupProcedureArray(
+                group
+              ),
+
+            p_work_date:
+              date,
+
+            p_option_selections:
+              getGroupOptionSelectionsPayload(
+                group
+              ),
+          }
+
     const {
       data,
       error,
     } = await client.rpc(
-      'public_get_auto_available_slots_with_options',
-      {
-        p_service_ids:
-          group.serviceIds,
-
-        p_has_procedure:
-          getGroupProcedureArray(
-            group
-          ),
-
-        p_work_date:
-          date,
-
-        p_option_selections:
-          getGroupOptionSelectionsPayload(
-            group
-          ),
-      }
+      rpcName,
+      rpcArgs
     )
 
     if (error) {
@@ -1250,6 +1290,14 @@ if (
                         item.group
                       ),
 
+                    professional_id:
+                      state
+                        .areaSelectedProfessionals[
+                          item.group
+                            .areaId
+                        ] ||
+                      'ANY',
+
                     slot_start:
                       item.slot
                         .slot_start,
@@ -1364,10 +1412,103 @@ if (
     }
 
     // Quando há serviços de várias áreas,
-    // a atribuição é independente por área.
+    // carregamos profissionais separadamente por área.
     if (
       isMultiAreaBooking()
     ) {
+      const groups =
+        getBookingAreaGroups()
+
+      const results =
+        await Promise.all(
+          groups.map(
+            async (group) => {
+              const {
+                data,
+                error,
+              } = await client.rpc(
+                'public_get_booking_professionals',
+                {
+                  p_service_ids:
+                    group.serviceIds,
+                }
+              )
+
+              if (error) {
+                console.error(
+                  `Erro ao carregar profissionais de ${group.areaName}:`,
+                  error
+                )
+
+                return [
+                  group.areaId,
+                  [],
+                ]
+              }
+
+              return [
+                group.areaId,
+                data || [],
+              ]
+            }
+          )
+        )
+
+      state.areaProfessionals =
+        Object.fromEntries(
+          results
+        )
+
+      const nextSelections = {
+        ...state
+          .areaSelectedProfessionals,
+      }
+
+      groups.forEach(
+        (group) => {
+          const professionals =
+            state
+              .areaProfessionals[
+                group.areaId
+              ] ||
+            []
+
+          const current =
+            nextSelections[
+              group.areaId
+            ]
+
+          const currentValid =
+            current ===
+              'ANY' ||
+            professionals.some(
+              (professional) =>
+                professional.id ===
+                current
+            )
+
+          if (
+            professionals.length ===
+            1
+          ) {
+            nextSelections[
+              group.areaId
+            ] =
+              professionals[0].id
+          } else if (
+            !currentValid
+          ) {
+            nextSelections[
+              group.areaId
+            ] =
+              'ANY'
+          }
+        }
+      )
+
+      state.areaSelectedProfessionals =
+        nextSelections
+
       state.professionals =
         []
 
@@ -1849,6 +1990,111 @@ if (
             )
         )
 
+    // =======================================================
+    // FILTRO DINÂMICO POR SECÇÃO
+    // =======================================================
+
+    const filterCategories =
+      configuredCategories.filter(
+        (category) =>
+          state.services.some(
+            (service) =>
+              service.category_id ===
+              category.normalized_id &&
+              getServiceType(
+                service
+              ) !==
+              'manutencao-outra'
+          )
+      )
+
+    if (
+      filterCategories.length >
+      1
+    ) {
+      const filters =
+        document.createElement(
+          'div'
+        )
+
+      filters.className =
+        'public-service-filters'
+
+      const allButton =
+        document.createElement(
+          'button'
+        )
+
+      allButton.type =
+        'button'
+
+      allButton.className =
+        `public-service-filter${
+          state.serviceCategoryFilter ===
+          'ALL'
+            ? ' selected'
+            : ''
+        }`
+
+      allButton.textContent =
+        'Todos'
+
+      allButton.addEventListener(
+        'click',
+        () => {
+          state.serviceCategoryFilter =
+            'ALL'
+
+          renderServices()
+        }
+      )
+
+      filters.appendChild(
+        allButton
+      )
+
+      filterCategories.forEach(
+        (category) => {
+          const button =
+            document.createElement(
+              'button'
+            )
+
+          button.type =
+            'button'
+
+          button.className =
+            `public-service-filter${
+              state.serviceCategoryFilter ===
+              category.normalized_id
+                ? ' selected'
+                : ''
+            }`
+
+          button.textContent =
+            category.normalized_name
+
+          button.addEventListener(
+            'click',
+            () => {
+              state.serviceCategoryFilter =
+                category.normalized_id
+
+              renderServices()
+            }
+          )
+
+          filters.appendChild(
+            button
+          )
+        }
+      )
+
+      el.serviceCategories.appendChild(
+        filters
+      )
+    }
+
     const knownCategoryIds =
       new Set(
         configuredCategories.map(
@@ -1859,6 +2105,15 @@ if (
 
     configuredCategories.forEach(
       (category) => {
+        if (
+          state.serviceCategoryFilter !==
+            'ALL' &&
+          state.serviceCategoryFilter !==
+            category.normalized_id
+        ) {
+          return
+        }
+
         const categoryServices =
           state.services
             .filter(
@@ -1992,6 +2247,8 @@ if (
         )
 
     if (
+      state.serviceCategoryFilter ===
+        'ALL' &&
       uncategorizedServices.length
     ) {
       const section =
@@ -2994,7 +3251,15 @@ if (
                 ' + '
               )
 
-          box.innerHTML = `
+          const header =
+            document.createElement(
+              'div'
+            )
+
+          header.className =
+            'public-area-professional__header'
+
+          header.innerHTML = `
             <div>
               <strong>
                 ${escapeHtml(
@@ -3008,11 +3273,206 @@ if (
                 )}
               </small>
             </div>
-
-            <span>
-              Profissional atribuída automaticamente
-            </span>
           `
+
+          box.appendChild(
+            header
+          )
+
+          const professionals =
+            state
+              .areaProfessionals[
+                group.areaId
+              ] ||
+            []
+
+          if (
+            !professionals.length
+          ) {
+            const empty =
+              document.createElement(
+                'p'
+              )
+
+            empty.className =
+              'public-muted'
+
+            empty.textContent =
+              'Não existem profissionais disponíveis para estes serviços.'
+
+            box.appendChild(
+              empty
+            )
+
+            el.professionals.appendChild(
+              box
+            )
+
+            return
+          }
+
+          const choices =
+            document.createElement(
+              'div'
+            )
+
+          choices.className =
+            'public-area-professional__choices'
+
+          const selectedId =
+            state
+              .areaSelectedProfessionals[
+                group.areaId
+              ] ||
+            (
+              professionals.length ===
+              1
+                ? professionals[0].id
+                : 'ANY'
+            )
+
+          // Se houver mais de uma profissional,
+          // permitimos "Qualquer profissional".
+          if (
+            professionals.length >
+            1
+          ) {
+            const anyButton =
+              document.createElement(
+                'button'
+              )
+
+            anyButton.type =
+              'button'
+
+            anyButton.className =
+              `public-area-professional-choice${
+                selectedId ===
+                'ANY'
+                  ? ' selected'
+                  : ''
+              }`
+
+            anyButton.innerHTML = `
+              <span class="public-professional-avatar">
+                ★
+              </span>
+
+              <strong>
+                Qualquer profissional
+              </strong>
+            `
+
+            anyButton.addEventListener(
+              'click',
+              async () => {
+                state
+                  .areaSelectedProfessionals[
+                    group.areaId
+                  ] =
+                  'ANY'
+
+                state.selectedSlot =
+                  null
+
+                renderProfessionals()
+                updateSummary()
+
+                await loadSlots()
+              }
+            )
+
+            choices.appendChild(
+              anyButton
+            )
+          }
+
+          professionals.forEach(
+            (professional) => {
+              const button =
+                document.createElement(
+                  'button'
+                )
+
+              button.type =
+                'button'
+
+              button.className =
+                `public-area-professional-choice${
+                  selectedId ===
+                  professional.id
+                    ? ' selected'
+                    : ''
+                }`
+
+              const avatar =
+                professional.avatar_path
+                  ? getAvatarUrl(
+                      professional
+                        .avatar_path
+                    )
+                  : ''
+
+              button.innerHTML = `
+                <span class="public-professional-avatar">
+                  ${
+                    avatar
+                      ? `
+                        <img
+                          src="${avatar}"
+                          alt=""
+                        >
+                      `
+                      : escapeHtml(
+                          (
+                            professional
+                              .display_name ||
+                            '?'
+                          )
+                            .charAt(
+                              0
+                            )
+                            .toUpperCase()
+                        )
+                  }
+                </span>
+
+                <strong>
+                  ${escapeHtml(
+                    professional
+                      .display_name
+                  )}
+                </strong>
+              `
+
+              button.addEventListener(
+                'click',
+                async () => {
+                  state
+                    .areaSelectedProfessionals[
+                      group.areaId
+                    ] =
+                    professional.id
+
+                  state.selectedSlot =
+                    null
+
+                  renderProfessionals()
+                  updateSummary()
+
+                  await loadSlots()
+                }
+              )
+
+              choices.appendChild(
+                button
+              )
+            }
+          )
+
+          box.appendChild(
+            choices
+          )
 
           el.professionals.appendChild(
             box
@@ -4126,6 +4586,12 @@ if (
 
             option_selections:
               item.option_selections,
+
+            professional_id:
+              item.professional_id ===
+                'ANY'
+                ? null
+                : item.professional_id,
           })
         )
 
@@ -4955,8 +5421,46 @@ if (
     } else if (
       isMultiAreaBooking()
     ) {
+      const labels =
+        getBookingAreaGroups().map(
+          (group) => {
+            const selectedId =
+              state
+                .areaSelectedProfessionals[
+                  group.areaId
+                ] ||
+              'ANY'
+
+            const professional =
+              (
+                state
+                  .areaProfessionals[
+                    group.areaId
+                  ] ||
+                []
+              ).find(
+                (item) =>
+                  item.id ===
+                  selectedId
+              )
+
+            return `${group.areaName}: ${
+              selectedId ===
+              'ANY'
+                ? 'Qualquer profissional'
+                : (
+                    professional
+                      ?.display_name ||
+                    'Profissional'
+                  )
+            }`
+          }
+        )
+
       el.summaryProfessional.textContent =
-        'Atribuição automática por área'
+        labels.join(
+          ' · '
+        )
     } else if (
       state.selectedProfessional ===
       'ANY'

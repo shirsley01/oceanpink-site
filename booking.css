@@ -907,3 +907,111 @@
         text-align: left;
     }
 }
+
+
+/* ==========================================================
+   FILTRO DINÂMICO DE SECÇÕES
+========================================================== */
+
+.public-service-filters {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-bottom: 22px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.public-service-filters::-webkit-scrollbar {
+    display: none;
+}
+
+.public-service-filter {
+    flex: 0 0 auto;
+    min-height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 15px;
+    background: white;
+    color: var(--text);
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.public-service-filter.selected {
+    border-color: var(--pink-dark);
+    background: var(--pink-dark);
+    color: white;
+}
+
+
+/* ==========================================================
+   ESCOLHA DE PROFISSIONAL POR ÁREA
+========================================================== */
+
+.public-area-professional {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+}
+
+.public-area-professional__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.public-area-professional__header > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.public-area-professional__choices {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.public-area-professional-choice {
+    min-height: 96px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--text);
+    cursor: pointer;
+}
+
+.public-area-professional-choice.selected {
+    border-color: var(--pink-medium);
+    background: var(--pink-light);
+}
+
+.public-area-professional-choice strong {
+    font-size: .8rem;
+    text-align: center;
+}
+
+@media (max-width: 650px) {
+    .public-area-professional__choices {
+        grid-template-columns: 1fr;
+    }
+
+    .public-area-professional-choice {
+        min-height: 74px;
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 11px 13px;
+    }
+}
