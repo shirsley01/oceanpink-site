@@ -1,3 +1,4 @@
+
 (() => {
   const SUPABASE_URL =
     'https://gwczbdjjawsjttzskqms.supabase.co'
@@ -30,6 +31,9 @@
   selectedServiceOptions: {},
 
   selectedProfessional: 'ANY',
+
+  areaProfessionals: {},
+  multiAreaSchedule: [],
 
   selectedDate:
     getLocalDateString(
@@ -797,14 +801,543 @@ if (
   }
 
   // =========================================================
+  // RESERVA POR ÁREAS
+  // =========================================================
+
+  function getBookingAreaGroups() {
+    const groups =
+      new Map()
+
+    state.selectedServices.forEach(
+      (serviceId) => {
+        const service =
+          state.services.find(
+            (item) =>
+              item.id ===
+              serviceId
+          )
+
+        if (!service) {
+          return
+        }
+
+        const category =
+          state.serviceCategories.find(
+            (item) =>
+              (
+                item.category_id ||
+                item.id
+              ) ===
+              service.category_id
+          )
+
+        const areaId =
+          category?.area_id ||
+          'outros'
+
+        const areaName =
+          category?.area_name ||
+          'Outros'
+
+        const areaSortOrder =
+          Number(
+            category
+              ?.area_sort_order ??
+            9999
+          )
+
+        if (
+          !groups.has(
+            areaId
+          )
+        ) {
+          groups.set(
+            areaId,
+            {
+              areaId,
+              areaName,
+              areaSortOrder,
+              serviceIds: [],
+            }
+          )
+        }
+
+        groups
+          .get(
+            areaId
+          )
+          .serviceIds.push(
+            serviceId
+          )
+      }
+    )
+
+    return Array.from(
+      groups.values()
+    ).sort(
+      (a, b) =>
+        a.areaSortOrder -
+          b.areaSortOrder ||
+        a.areaName.localeCompare(
+          b.areaName,
+          'pt-PT',
+          {
+            sensitivity:
+              'base',
+          }
+        )
+    )
+  }
+
+  function isMultiAreaBooking() {
+    return (
+      !state.fixedProfessional &&
+      getBookingAreaGroups().length >
+        1
+    )
+  }
+
+  function getGroupProcedureArray(
+    group
+  ) {
+    return group.serviceIds.map(
+      (serviceId) =>
+        Boolean(
+          state
+            .procedureOptions[
+              serviceId
+            ]
+        )
+    )
+  }
+
+  function getGroupOptionSelectionsPayload(
+    group
+  ) {
+    const payload =
+      {}
+
+    group.serviceIds.forEach(
+      (serviceId) => {
+        const ids =
+          getSelectedOptionIds(
+            serviceId
+          )
+
+        if (ids.length) {
+          payload[
+            serviceId
+          ] =
+            ids
+        }
+      }
+    )
+
+    return payload
+  }
+
+  function permutations(
+    items
+  ) {
+    if (
+      items.length <= 1
+    ) {
+      return [
+        items,
+      ]
+    }
+
+    const result =
+      []
+
+    items.forEach(
+      (
+        item,
+        index
+      ) => {
+        const rest = [
+          ...items.slice(
+            0,
+            index
+          ),
+          ...items.slice(
+            index + 1
+          ),
+        ]
+
+        permutations(
+          rest
+        ).forEach(
+          (permutation) => {
+            result.push([
+              item,
+              ...permutation,
+            ])
+          }
+        )
+      }
+    )
+
+    return result
+  }
+
+  async function fetchAutoSlotsForArea(
+    group,
+    date
+  ) {
+    const {
+      data,
+      error,
+    } = await client.rpc(
+      'public_get_auto_available_slots_with_options',
+      {
+        p_service_ids:
+          group.serviceIds,
+
+        p_has_procedure:
+          getGroupProcedureArray(
+            group
+          ),
+
+        p_work_date:
+          date,
+
+        p_option_selections:
+          getGroupOptionSelectionsPayload(
+            group
+          ),
+      }
+    )
+
+    if (error) {
+      console.error(
+        `Erro nos horários de ${group.areaName}:`,
+        error
+      )
+
+      throw error
+    }
+
+    return data || []
+  }
+
+  async function buildMultiAreaSchedulesForDate(
+    date
+  ) {
+    const groups =
+      getBookingAreaGroups()
+
+    if (
+      groups.length <= 1 ||
+      !requiredOptionsComplete()
+    ) {
+      return []
+    }
+
+    const slotEntries =
+      await Promise.all(
+        groups.map(
+          async (group) => [
+            group.areaId,
+            await fetchAutoSlotsForArea(
+              group,
+              date
+            ),
+          ]
+        )
+      )
+
+    const slotsByArea =
+      Object.fromEntries(
+        slotEntries
+      )
+
+    if (
+      groups.some(
+        (group) =>
+          !(
+            slotsByArea[
+              group.areaId
+            ] ||
+            []
+          ).length
+      )
+    ) {
+      return []
+    }
+
+    const schedules =
+      []
+
+    permutations(
+      groups
+    ).forEach(
+      (orderedGroups) => {
+        const firstGroup =
+          orderedGroups[0]
+
+        const firstSlots =
+          (
+            slotsByArea[
+              firstGroup.areaId
+            ] ||
+            []
+          ).slice(
+            0,
+            30
+          )
+
+        firstSlots.forEach(
+          (firstSlot) => {
+            const schedule = [
+              {
+                group:
+                  firstGroup,
+                slot:
+                  firstSlot,
+              },
+            ]
+
+            let cursor =
+              new Date(
+                firstSlot.slot_end
+              ).getTime()
+
+            let valid =
+              true
+
+            for (
+              let index = 1;
+              index <
+                orderedGroups.length;
+              index += 1
+            ) {
+              const group =
+                orderedGroups[
+                  index
+                ]
+
+              const nextSlot =
+                (
+                  slotsByArea[
+                    group.areaId
+                  ] ||
+                  []
+                ).find(
+                  (slot) =>
+                    new Date(
+                      slot.slot_start
+                    ).getTime() >=
+                    cursor
+                )
+
+              if (!nextSlot) {
+                valid =
+                  false
+                break
+              }
+
+              schedule.push({
+                group,
+                slot:
+                  nextSlot,
+              })
+
+              cursor =
+                new Date(
+                  nextSlot.slot_end
+                ).getTime()
+            }
+
+            if (!valid) {
+              return
+            }
+
+            const start =
+              new Date(
+                schedule[0]
+                  .slot
+                  .slot_start
+              ).getTime()
+
+            const finish =
+              new Date(
+                schedule[
+                  schedule.length -
+                  1
+                ].slot.slot_end
+              ).getTime()
+
+            let waitingMs =
+              0
+
+            for (
+              let index = 1;
+              index <
+                schedule.length;
+              index += 1
+            ) {
+              waitingMs +=
+                Math.max(
+                  0,
+                  new Date(
+                    schedule[
+                      index
+                    ].slot.slot_start
+                  ).getTime() -
+                  new Date(
+                    schedule[
+                      index -
+                      1
+                    ].slot.slot_end
+                  ).getTime()
+                )
+            }
+
+            schedules.push({
+              slot_start:
+                schedule[0]
+                  .slot
+                  .slot_start,
+
+              slot_end:
+                schedule[
+                  schedule.length -
+                  1
+                ].slot.slot_end,
+
+              total_duration_minutes:
+                Math.round(
+                  (
+                    finish -
+                    start -
+                    waitingMs
+                  ) /
+                  60000
+                ),
+
+              total_price:
+                calculateBookingTotal(),
+
+              waiting_minutes:
+                Math.round(
+                  waitingMs /
+                  60000
+                ),
+
+              schedule:
+                schedule.map(
+                  (item) => ({
+                    area_id:
+                      item.group
+                        .areaId,
+
+                    area_name:
+                      item.group
+                        .areaName,
+
+                    service_ids:
+                      item.group
+                        .serviceIds,
+
+                    has_procedure:
+                      getGroupProcedureArray(
+                        item.group
+                      ),
+
+                    option_selections:
+                      getGroupOptionSelectionsPayload(
+                        item.group
+                      ),
+
+                    slot_start:
+                      item.slot
+                        .slot_start,
+
+                    slot_end:
+                      item.slot
+                        .slot_end,
+                  })
+                ),
+            })
+          }
+        )
+      }
+    )
+
+    schedules.sort(
+      (a, b) => {
+        const startDiff =
+          new Date(
+            a.slot_start
+          ).getTime() -
+          new Date(
+            b.slot_start
+          ).getTime()
+
+        if (startDiff) {
+          return startDiff
+        }
+
+        const waitDiff =
+          Number(
+            a.waiting_minutes ||
+            0
+          ) -
+          Number(
+            b.waiting_minutes ||
+            0
+          )
+
+        if (waitDiff) {
+          return waitDiff
+        }
+
+        return (
+          new Date(
+            a.slot_end
+          ).getTime() -
+          new Date(
+            b.slot_end
+          ).getTime()
+        )
+      }
+    )
+
+    const unique =
+      new Map()
+
+    schedules.forEach(
+      (schedule) => {
+        const key =
+          schedule.slot_start
+
+        if (
+          !unique.has(
+            key
+          )
+        ) {
+          unique.set(
+            key,
+            schedule
+          )
+        }
+      }
+    )
+
+    return Array.from(
+      unique.values()
+    ).slice(
+      0,
+      20
+    )
+  }
+
+  // =========================================================
   // PROFISSIONAIS
   // =========================================================
 
   async function loadProfessionals() {
-    // =======================================================
-    // AGENDA INDIVIDUAL
-    // =======================================================
-
     if (
       state.fixedProfessional
     ) {
@@ -818,15 +1351,28 @@ if (
       return
     }
 
-    // =======================================================
-    // WEBSITE NORMAL
-    // =======================================================
-
     if (
       !state.selectedServices.length
     ) {
       state.professionals =
         []
+
+      state.selectedProfessional =
+        'ANY'
+
+      return
+    }
+
+    // Quando há serviços de várias áreas,
+    // a atribuição é independente por área.
+    if (
+      isMultiAreaBooking()
+    ) {
+      state.professionals =
+        []
+
+      state.selectedProfessional =
+        'MULTI_AREA'
 
       return
     }
@@ -842,9 +1388,7 @@ if (
       }
     )
 
-    if (
-      error
-    ) {
+    if (error) {
       console.error(
         'Erro ao carregar profissionais:',
         error
@@ -864,12 +1408,16 @@ if (
       data || []
 
     if (
-      state.selectedProfessional !==
-        'ANY' &&
-      !state.professionals.some(
-        (professional) =>
-          professional.id ===
-          state.selectedProfessional
+      state.selectedProfessional ===
+        'MULTI_AREA' ||
+      (
+        state.selectedProfessional !==
+          'ANY' &&
+        !state.professionals.some(
+          (professional) =>
+            professional.id ===
+            state.selectedProfessional
+        )
       )
     ) {
       state.selectedProfessional =
@@ -2388,12 +2936,6 @@ if (
   // =========================================================
 
   function renderProfessionals() {
-    // =======================================================
-    // AGENDA INDIVIDUAL
-    //
-    // Não desenhar qualquer seletor.
-    // =======================================================
-
     if (
       state.fixedProfessional
     ) {
@@ -2407,10 +2949,6 @@ if (
       return
     }
 
-    // =======================================================
-    // WEBSITE NORMAL
-    // =======================================================
-
     if (
       !state.selectedServices.length
     ) {
@@ -2421,20 +2959,81 @@ if (
     }
 
     if (
+      isMultiAreaBooking()
+    ) {
+      const groups =
+        getBookingAreaGroups()
+
+      el.professionals.innerHTML =
+        ''
+
+      groups.forEach(
+        (group) => {
+          const box =
+            document.createElement(
+              'div'
+            )
+
+          box.className =
+            'public-area-professional'
+
+          const serviceNames =
+            group.serviceIds
+              .map(
+                (serviceId) =>
+                  state.services.find(
+                    (service) =>
+                      service.id ===
+                      serviceId
+                  )?.name
+              )
+              .filter(
+                Boolean
+              )
+              .join(
+                ' + '
+              )
+
+          box.innerHTML = `
+            <div>
+              <strong>
+                ${escapeHtml(
+                  group.areaName
+                )}
+              </strong>
+
+              <small>
+                ${escapeHtml(
+                  serviceNames
+                )}
+              </small>
+            </div>
+
+            <span>
+              Profissional atribuída automaticamente
+            </span>
+          `
+
+          el.professionals.appendChild(
+            box
+          )
+        }
+      )
+
+      return
+    }
+
+    if (
       !state.professionals.length
     ) {
       el.professionals.innerHTML =
-        '<p class="public-muted">Nenhuma profissional realiza todos os serviços selecionados.</p>'
+        '<p class="public-muted">Não existem profissionais disponíveis para este serviço.</p>'
 
       return
     }
 
     el.professionals.innerHTML =
       ''
-
-    // -------------------------------------------------------
-    // QUALQUER PROFISSIONAL
-    // -------------------------------------------------------
 
     el.professionals.appendChild(
       professionalButton({
@@ -2448,10 +3047,6 @@ if (
           null,
       })
     )
-
-    // -------------------------------------------------------
-    // PROFISSIONAIS
-    // -------------------------------------------------------
 
     state.professionals.forEach(
       (professional) => {
@@ -2582,8 +3177,6 @@ if (
       return
     }
 
-    // Não pesquisar enquanto
-    // faltar uma opção obrigatória.
     if (
       !requiredOptionsComplete()
     ) {
@@ -2610,12 +3203,55 @@ if (
     el.slots.innerHTML =
       ''
 
+    // =======================================================
+    // VÁRIAS ÁREAS
+    // =======================================================
+
+    if (
+      isMultiAreaBooking()
+    ) {
+      try {
+        const schedules =
+          await buildMultiAreaSchedulesForDate(
+            state.selectedDate
+          )
+
+        state.slots =
+          schedules
+
+        state.selectedSlot =
+          null
+
+        renderSlots()
+
+        return
+      } catch (error) {
+        console.error(
+          'Erro ao procurar sequência multi-área:',
+          error
+        )
+
+        state.slots =
+          []
+
+        state.selectedSlot =
+          null
+
+        el.slotsStatus.textContent =
+          ''
+
+        showError(
+          'Não foi possível carregar os horários disponíveis.'
+        )
+
+        renderSlots()
+
+        return
+      }
+    }
+
     let data
     let error
-
-    // =======================================================
-    // QUALQUER PROFISSIONAL
-    // =======================================================
 
     if (
       state.selectedProfessional ===
@@ -2644,14 +3280,7 @@ if (
 
       error =
         result.error
-    }
-
-    // =======================================================
-    // PROFISSIONAL ESPECÍFICA
-    // Inclui /gabriela
-    // =======================================================
-
-    else {
+    } else {
       const result =
         await client.rpc(
           'public_get_available_slots_with_options',
@@ -2681,9 +3310,7 @@ if (
         result.error
     }
 
-    if (
-      error
-    ) {
+    if (error) {
       console.error(
         'Erro nos horários:',
         error
@@ -2791,7 +3418,9 @@ if (
     }
 
     el.slotsStatus.textContent =
-      'Escolha um horário'
+      isMultiAreaBooking()
+        ? 'Escolha a hora de início. Os restantes serviços serão organizados automaticamente.'
+        : 'Escolha um horário'
 
     el.nextButton.hidden =
       true
@@ -2853,6 +3482,113 @@ if (
       showError(
         'Selecione primeiro um serviço.'
       )
+
+      return
+    }
+
+    if (
+      isMultiAreaBooking()
+    ) {
+      el.nextButton.disabled =
+        true
+
+      el.nextButton.textContent =
+        'A procurar...'
+
+      el.nextList.innerHTML =
+        ''
+
+      const currentDate =
+        new Date(
+          `${state.selectedDate}T12:00:00`
+        )
+
+      let found =
+        null
+
+      for (
+        let offset = 1;
+        offset <= 45;
+        offset += 1
+      ) {
+        const date =
+          new Date(
+            currentDate
+          )
+
+        date.setDate(
+          date.getDate() +
+          offset
+        )
+
+        const dateString =
+          getLocalDateString(
+            date
+          )
+
+        try {
+          const schedules =
+            await buildMultiAreaSchedulesForDate(
+              dateString
+            )
+
+          if (
+            schedules.length
+          ) {
+            found = {
+              date:
+                dateString,
+
+              slots:
+                schedules,
+            }
+
+            break
+          }
+        } catch (error) {
+          console.error(
+            'Erro ao procurar próxima disponibilidade multi-área:',
+            error
+          )
+        }
+      }
+
+      if (!found) {
+        el.nextList.innerHTML =
+          '<p class="public-muted">Não encontrámos disponibilidade nos próximos 45 dias.</p>'
+
+        el.nextButton.disabled =
+          false
+
+        el.nextButton.textContent =
+          'Procurar próxima disponibilidade'
+
+        return
+      }
+
+      state.selectedDate =
+        found.date
+
+      el.date.value =
+        found.date
+
+      state.slots =
+        found.slots
+
+      state.selectedSlot =
+        found.slots[0]
+
+      el.nextList.innerHTML =
+        ''
+
+      renderSlots()
+      updateSummary()
+
+      el.nextButton.disabled =
+        false
+
+      el.nextButton.textContent =
+        'Procurar próxima disponibilidade'
 
       return
     }
@@ -3318,14 +4054,6 @@ if (
     }
 
     if (
-      !state.selectedProfessional
-    ) {
-      return showError(
-        'Selecione uma profissional.'
-      )
-    }
-
-    if (
       !state.selectedSlot
     ) {
       return showError(
@@ -3339,14 +4067,233 @@ if (
     el.confirm.textContent =
       'A confirmar...'
 
+    // =======================================================
+    // RESERVA MULTI-ÁREA
+    // =======================================================
+
+    if (
+      isMultiAreaBooking()
+    ) {
+      if (
+        state.discountCode
+      ) {
+        showError(
+          'Para uma marcação com serviços de áreas diferentes, remova o código de desconto antes de confirmar.'
+        )
+
+        el.confirm.textContent =
+          'Confirmar marcação'
+
+        updateConfirmState()
+
+        return
+      }
+
+      const schedule =
+        state.selectedSlot
+          .schedule ||
+        []
+
+      if (
+        !schedule.length
+      ) {
+        showError(
+          'Não foi possível preparar a sequência dos serviços. Escolha novamente o horário.'
+        )
+
+        el.confirm.textContent =
+          'Confirmar marcação'
+
+        updateConfirmState()
+
+        return
+      }
+
+      const groupsPayload =
+        schedule.map(
+          (item) => ({
+            area_id:
+              item.area_id,
+
+            service_ids:
+              item.service_ids,
+
+            has_procedure:
+              item.has_procedure,
+
+            start_at:
+              item.slot_start,
+
+            option_selections:
+              item.option_selections,
+          })
+        )
+
+      const {
+        data,
+        error,
+      } = await client.rpc(
+        'public_create_booking_bundle_any_with_options',
+        {
+          p_client_name:
+            el.name.value.trim(),
+
+          p_phone_e164:
+            normalizedPhone,
+
+          p_email:
+            el.email.value.trim() ||
+            null,
+
+          p_groups:
+            groupsPayload,
+
+          p_notes_client:
+            el.notes.value.trim() ||
+            null,
+        }
+      )
+
+      if (error) {
+        console.error(
+          'Erro ao criar reserva multi-área:',
+          error
+        )
+
+        el.confirm.textContent =
+          'Confirmar marcação'
+
+        updateConfirmState()
+
+        if (
+          String(
+            error.message ||
+            ''
+          )
+            .toLowerCase()
+            .includes(
+              'dispon'
+            )
+        ) {
+          showError(
+            'Um dos horários acabou de ficar indisponível. Escolha outro horário.'
+          )
+
+          await loadSlots()
+
+          return
+        }
+
+        showError(
+          error.message ||
+          'Não foi possível confirmar a marcação.'
+        )
+
+        return
+      }
+
+      const result =
+        data?.[0] ||
+        null
+
+      el.app.style.display =
+        'none'
+
+      el.success.hidden =
+        false
+
+      el.success.style.display =
+        'block'
+
+      hideMobileBookingBar()
+
+      const scheduleText =
+        schedule
+          .map(
+            (item) =>
+              `${item.area_name}: ${formatTime(
+                item.slot_start
+              )}–${formatTime(
+                item.slot_end
+              )}`
+          )
+          .join(
+            ' · '
+          )
+
+      el.success.innerHTML = `
+        <div class="public-success-icon">
+          ✓
+        </div>
+
+        <p class="eyebrow">
+          Marcação confirmada
+        </p>
+
+        <p>
+          ${escapeHtml(
+            el.name.value.trim()
+          )},
+          a sua reserva ficou registada para
+          <strong>
+            ${escapeHtml(
+              formatDate(
+                state.selectedDate
+              )
+            )}
+          </strong>.
+        </p>
+
+        <p>
+          ${escapeHtml(
+            scheduleText
+          )}
+        </p>
+
+        <a
+          href="/"
+          class="button"
+        >
+          Voltar ao início
+        </a>
+      `
+
+      window.scrollTo({
+        top:
+          0,
+
+        behavior:
+          'smooth',
+      })
+
+      return
+    }
+
+    // =======================================================
+    // RESERVA NORMAL — UMA ÁREA
+    // =======================================================
+
+    if (
+      !state.selectedProfessional
+    ) {
+      el.confirm.textContent =
+        'Confirmar marcação'
+
+      updateConfirmState()
+
+      return showError(
+        'Selecione uma profissional.'
+      )
+    }
+
     const automatic =
       state.selectedProfessional ===
       'ANY'
 
     const rpcName =
-  automatic
-    ? 'public_create_booking_any_with_discount'
-    : 'public_create_booking_with_discount'
+      automatic
+        ? 'public_create_booking_any_with_discount'
+        : 'public_create_booking_with_discount'
 
     const commonArgs = {
       p_client_name:
@@ -3376,10 +4323,10 @@ if (
 
       p_option_selections:
         getOptionSelectionsPayload(),
-        
+
       p_discount_code:
-      state.discountCode ||
-     null,
+        state.discountCode ||
+        null,
     }
 
     const rpcArgs =
@@ -3401,9 +4348,7 @@ if (
       rpcArgs
     )
 
-    if (
-      error
-    ) {
+    if (error) {
       console.error(
         'Erro ao criar marcação:',
         error
@@ -3445,10 +4390,6 @@ if (
       data?.[0] ||
       null
 
-    // =======================================================
-    // NOME DA PROFISSIONAL
-    // =======================================================
-
     let professionalName =
       ''
 
@@ -3474,10 +4415,6 @@ if (
         )?.display_name ||
         'Profissional'
     }
-
-    // =======================================================
-    // SUCESSO
-    // =======================================================
 
     el.app.style.display =
       'none'
@@ -4016,6 +4953,11 @@ if (
         state.fixedProfessional
           .display_name
     } else if (
+      isMultiAreaBooking()
+    ) {
+      el.summaryProfessional.textContent =
+        'Atribuição automática por área'
+    } else if (
       state.selectedProfessional ===
       'ANY'
     ) {
@@ -4050,10 +4992,20 @@ if (
 
     el.summaryTime.textContent =
       state.selectedSlot
-        ? formatTime(
-            state
-              .selectedSlot
-              .slot_start
+        ? (
+            isMultiAreaBooking()
+              ? `${formatTime(
+                  state.selectedSlot
+                    .slot_start
+                )} – ${formatTime(
+                  state.selectedSlot
+                    .slot_end
+                )}`
+              : formatTime(
+                  state
+                    .selectedSlot
+                    .slot_start
+                )
           )
         : '—'
 
@@ -4163,7 +5115,10 @@ if (
           .selectedServices
           .length &&
         requiredOptionsComplete() &&
-        state.selectedProfessional &&
+        (
+          isMultiAreaBooking() ||
+          state.selectedProfessional
+        ) &&
         state.selectedSlot
       )
 

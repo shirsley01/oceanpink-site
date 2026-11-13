@@ -853,3 +853,57 @@
         padding-right: 14px;
     }
 }
+
+
+/* ==========================================================
+   RESERVA MULTI-ÁREA — PROFISSIONAL POR ÁREA
+========================================================== */
+
+.public-area-professional {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    border: 1px solid var(--border);
+    padding: 16px;
+    background: white;
+}
+
+.public-area-professional > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.public-area-professional strong {
+    font-size: .9rem;
+}
+
+.public-area-professional small {
+    color: var(--text-light);
+    font-size: .74rem;
+}
+
+.public-area-professional > span {
+    flex-shrink: 0;
+    max-width: 200px;
+    color: var(--pink-dark);
+    font-size: .75rem;
+    font-weight: 600;
+    text-align: right;
+}
+
+@media (max-width: 650px) {
+    .public-area-professional {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .public-area-professional > span {
+        max-width: none;
+        text-align: left;
+    }
+}
