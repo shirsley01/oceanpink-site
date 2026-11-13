@@ -720,3 +720,136 @@
         text-align: left;
     }
 }
+
+
+/* ==========================================================
+   BARRA FIXA DE RESUMO / CONTINUAR — MOBILE
+========================================================== */
+
+.mobile-booking-bar {
+    display: none;
+}
+
+@media (max-width: 900px) {
+
+    .mobile-booking-bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1400;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+
+        padding:
+            12px
+            max(18px, env(safe-area-inset-right))
+            calc(12px + env(safe-area-inset-bottom))
+            max(18px, env(safe-area-inset-left));
+
+        border-top: 1px solid var(--border);
+
+        background:
+            rgba(255, 252, 252, .97);
+
+        box-shadow:
+            0 -8px 28px
+            rgba(57, 40, 47, .10);
+
+        backdrop-filter:
+            blur(14px);
+
+        -webkit-backdrop-filter:
+            blur(14px);
+    }
+
+    .mobile-booking-bar[hidden] {
+        display: none !important;
+    }
+
+    .mobile-booking-bar__summary {
+        min-width: 0;
+
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .mobile-booking-bar__summary strong {
+        color: var(--text);
+
+        font-size: .82rem;
+        font-weight: 600;
+
+        white-space: nowrap;
+    }
+
+    .mobile-booking-bar__summary span {
+        color: var(--pink-dark);
+
+        font-size: 1rem;
+        font-weight: 700;
+
+        white-space: nowrap;
+    }
+
+    .mobile-booking-bar__button {
+        min-width: 132px;
+        min-height: 48px;
+
+        border: 1px solid var(--pink-dark);
+        border-radius: 3px;
+
+        padding: 12px 18px;
+
+        background: var(--pink-dark);
+        color: white;
+
+        font: inherit;
+        font-size: .88rem;
+        font-weight: 700;
+
+        cursor: pointer;
+    }
+
+    .mobile-booking-bar__button:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+    }
+
+    body.has-mobile-booking-bar {
+        padding-bottom:
+            calc(
+                92px +
+                env(safe-area-inset-bottom)
+            );
+    }
+
+    .public-booking-card {
+        scroll-margin-top:
+            calc(
+                var(--header-height) +
+                18px
+            );
+    }
+}
+
+@media (max-width: 420px) {
+
+    .mobile-booking-bar {
+        gap: 10px;
+
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .mobile-booking-bar__button {
+        min-width: 118px;
+
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+}

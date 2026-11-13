@@ -1,4 +1,3 @@
-
 (() => {
   const SUPABASE_URL =
     'https://gwczbdjjawsjttzskqms.supabase.co'
@@ -206,6 +205,7 @@ summaryDiscount:
       state.selectedDate
 
     bindEvents()
+    setupMobileBookingBar()
 
     // Verificar se estamos em:
     // oceanpink.pt/gabriela
@@ -3488,6 +3488,8 @@ if (
     el.success.style.display =
       'block'
 
+    hideMobileBookingBar()
+
     el.success.innerHTML = `
       <div class="public-success-icon">
         ✓
@@ -3557,6 +3559,310 @@ if (
   // =========================================================
   // RESUMO
   // =========================================================
+
+  // =========================================================
+  // BARRA FIXA MOBILE — RESUMO + CONTINUAR
+  // =========================================================
+
+  function setupMobileBookingBar() {
+    if (
+      document.getElementById(
+        'mobile-booking-bar'
+      )
+    ) {
+      return
+    }
+
+    const bar =
+      document.createElement(
+        'div'
+      )
+
+    bar.id =
+      'mobile-booking-bar'
+
+    bar.className =
+      'mobile-booking-bar'
+
+    bar.hidden =
+      true
+
+    bar.innerHTML = `
+      <div class="mobile-booking-bar__summary">
+        <strong id="mobile-booking-count">
+          0 serviços
+        </strong>
+
+        <span id="mobile-booking-total">
+          0,00 €
+        </span>
+      </div>
+
+      <button
+        id="mobile-booking-continue"
+        type="button"
+        class="mobile-booking-bar__button"
+      >
+        Continuar
+      </button>
+    `
+
+    document.body.appendChild(
+      bar
+    )
+
+    document
+      .getElementById(
+        'mobile-booking-continue'
+      )
+      ?.addEventListener(
+        'click',
+        handleMobileBookingContinue
+      )
+
+    updateMobileBookingBar()
+  }
+
+  function hideMobileBookingBar() {
+    const bar =
+      document.getElementById(
+        'mobile-booking-bar'
+      )
+
+    if (bar) {
+      bar.hidden =
+        true
+    }
+
+    document.body.classList.remove(
+      'has-mobile-booking-bar'
+    )
+  }
+
+  function scrollToBookingElement(
+    element
+  ) {
+    if (!element) {
+      return
+    }
+
+    const target =
+      element.closest(
+        '.public-booking-card'
+      ) ||
+      element
+
+    target.scrollIntoView({
+      behavior:
+        'smooth',
+
+      block:
+        'start',
+    })
+  }
+
+  function getMobileBookingNextStep() {
+    // Ainda faltam opções obrigatórias.
+    if (
+      !requiredOptionsComplete()
+    ) {
+      return {
+        label:
+          'Continuar',
+
+        target:
+          el.serviceCategories,
+      }
+    }
+
+    // Sem horário escolhido:
+    // levar diretamente para data/horários.
+    if (
+      !state.selectedSlot
+    ) {
+      return {
+        label:
+          'Continuar',
+
+        target:
+          el.date ||
+          el.slots,
+      }
+    }
+
+    const normalizedPhone =
+      normalizePhone(
+        el.phone.value
+      )
+
+    const clientComplete =
+      Boolean(
+        el.name.value.trim()
+      ) &&
+      /^\+[1-9][0-9]{7,14}$/.test(
+        normalizedPhone
+      )
+
+    // Horário escolhido, faltam dados.
+    if (
+      !clientComplete
+    ) {
+      return {
+        label:
+          'Continuar',
+
+        target:
+          el.name,
+      }
+    }
+
+    // Tudo preenchido.
+    return {
+      label:
+        'Confirmar',
+
+      target:
+        el.confirm,
+
+      confirm:
+        true,
+    }
+  }
+
+  function handleMobileBookingContinue() {
+    const next =
+      getMobileBookingNextStep()
+
+    if (
+      next.confirm
+    ) {
+      if (
+        !el.confirm.disabled
+      ) {
+        el.confirm.click()
+      }
+
+      return
+    }
+
+    scrollToBookingElement(
+      next.target
+    )
+
+    if (
+      next.target &&
+      (
+        next.target.tagName ===
+          'INPUT' ||
+        next.target.tagName ===
+          'TEXTAREA'
+      )
+    ) {
+      window.setTimeout(
+        () => {
+          next.target.focus({
+            preventScroll:
+              true,
+          })
+        },
+        450
+      )
+    }
+  }
+
+  function updateMobileBookingBar() {
+    const bar =
+      document.getElementById(
+        'mobile-booking-bar'
+      )
+
+    if (!bar) {
+      return
+    }
+
+    const count =
+      state.selectedServices.length
+
+    if (
+      count === 0 ||
+      el.app?.style.display ===
+        'none'
+    ) {
+      hideMobileBookingBar()
+      return
+    }
+
+    bar.hidden =
+      false
+
+    document.body.classList.add(
+      'has-mobile-booking-bar'
+    )
+
+    const countElement =
+      document.getElementById(
+        'mobile-booking-count'
+      )
+
+    const totalElement =
+      document.getElementById(
+        'mobile-booking-total'
+      )
+
+    const button =
+      document.getElementById(
+        'mobile-booking-continue'
+      )
+
+    if (countElement) {
+      countElement.textContent =
+        count === 1
+          ? '1 serviço'
+          : `${count} serviços`
+    }
+
+    const subtotal =
+      calculateBookingTotal()
+
+    const total =
+      (
+        state.discountCode &&
+        state.discountFinalTotal !==
+          null
+      )
+        ? Number(
+            state.discountFinalTotal
+          )
+        : subtotal
+
+    if (totalElement) {
+      totalElement.textContent =
+        `${formatPrice(
+          total
+        )} €`
+    }
+
+    const next =
+      getMobileBookingNextStep()
+
+    if (button) {
+      button.textContent =
+        next.label
+
+      button.classList.toggle(
+        'is-confirm',
+        Boolean(
+          next.confirm
+        )
+      )
+
+      button.disabled =
+        Boolean(
+          next.confirm &&
+          el.confirm.disabled
+        )
+    }
+  }
 
   function calculateBookingTotal() {
   const selected =
@@ -3834,6 +4140,7 @@ if (
 }
 
     updateConfirmState()
+    updateMobileBookingBar()
   }
 
   // =========================================================
@@ -3859,6 +4166,8 @@ if (
         state.selectedProfessional &&
         state.selectedSlot
       )
+
+    updateMobileBookingBar()
   }
 
   // =========================================================
