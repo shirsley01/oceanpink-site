@@ -1043,3 +1043,127 @@
         padding: 11px 13px;
     }
 }
+
+
+/* ==========================================================
+   FILTROS DE SERVIÇOS — ESTILO FRESHA
+   Mantém a escala normal da página e permite swipe só na barra.
+========================================================== */
+
+/* Evita que o conteúdo horizontal force o Safari a reduzir a página inteira. */
+html,
+body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.public-booking-grid,
+.public-booking-main,
+.public-booking-card,
+#service-categories-container,
+.public-service-category,
+.public-services-list {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* O contentor nunca pode crescer para a largura total dos botões. */
+#service-categories-container {
+    overflow: visible;
+}
+
+/* Barra tipo Fresha: largura normal + swipe horizontal independente. */
+.public-service-filters {
+    position: sticky;
+    top: 74px;
+    z-index: 80;
+
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+
+    gap: 10px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    margin: 0 0 22px;
+    padding: 10px 0 11px;
+
+    background: rgba(255, 252, 252, 0.98);
+
+    box-sizing: border-box;
+
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+}
+
+.public-service-filters::-webkit-scrollbar {
+    display: none;
+}
+
+.public-service-filter {
+    flex: 0 0 auto !important;
+
+    width: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+
+    min-height: 44px;
+
+    border: 1px solid var(--border);
+    border-radius: 999px;
+
+    padding: 10px 20px;
+
+    background: white;
+    color: var(--text);
+
+    font: inherit;
+    font-size: .9rem;
+    font-weight: 600;
+    line-height: 1;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+.public-service-filter.selected {
+    border-color: var(--text);
+    background: var(--text);
+    color: white;
+}
+
+/* No telemóvel, mantém exatamente a largura útil da agenda.
+   Só os filtros continuam para fora internamente e podem ser arrastados. */
+@media (max-width: 650px) {
+    .public-service-filters {
+        top: 68px;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        gap: 9px;
+
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+
+        padding: 9px 0 10px;
+    }
+
+    .public-service-filter {
+        min-height: 42px;
+        padding: 9px 18px;
+        font-size: .86rem;
+    }
+}
+
